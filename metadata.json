@@ -1,0 +1,6 @@
+{
+  "name": "Aprenda JavaScript",
+  "description": "Uma plataforma interativa e gamificada para aprender programação em JavaScript com missões diárias, módulos progressivos, sistema de recompensas e feedback por inteligência artificial.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
