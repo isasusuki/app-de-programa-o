@@ -1,13 +1,1542 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <title>Aprenda JavaScript - Trilha Gamificada</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <!-- Tailwind CSS (Play CDN v3) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              zinc: {
+                750: '#222226',
+                850: '#151518',
+                950: '#09090b',
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            }
+          }
+        }
+      }
+    </script>
+    <!-- React & Babel CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: #09090b; }
+      ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+      @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+      .animate-float { animation: float 3s ease-in-out infinite; }
+      @keyframes pulse-ring { 0% { transform: scale(0.95); opacity: 0.5; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(0.95); opacity: 0.5; } }
+      .animate-pulse-ring { animation: pulse-ring 2s infinite; }
+    </style>
   </head>
-  <body>
+  <body class="bg-zinc-950 text-zinc-100 min-h-screen overflow-x-hidden selection:bg-yellow-400 selection:text-zinc-950">
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef } = React;
+
+      // Inline Portable SVG Icon Component
+      const Icon = ({ name, className = "w-5 h-5", ...props }) => {
+        const icons = {
+          Compass: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+            </svg>
+          ),
+          Variable: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M4 20h16A2 2 0 0 0 22 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" />
+              <path d="M8 8h3a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H8" /><path d="M16 8v8" />
+            </svg>
+          ),
+          Zap: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          ),
+          Repeat: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+            </svg>
+          ),
+          MousePointer: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/>
+            </svg>
+          ),
+          Globe: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          ),
+          Lock: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          ),
+          CheckCircle: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          ),
+          CheckCircle2: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+            </svg>
+          ),
+          Star: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          ),
+          Trophy: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/>
+              <path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"/><path d="M12 2a6 6 0 0 1 6 6v3.58a6 6 0 0 1-6 6 6 6 0 0 1-6-6V8a6 6 0 0 1 6-6z"/>
+            </svg>
+          ),
+          Flame: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+            </svg>
+          ),
+          Clock: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          ),
+          Settings: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          ),
+          ArrowUp: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+            </svg>
+          ),
+          Heart: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          ),
+          MessageSquare: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          ),
+          MessageCircle: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+          ),
+          Send: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          ),
+          Code: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+          ),
+          User: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+          ),
+          Sparkles: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+              <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5 5 3Z"/>
+            </svg>
+          ),
+          PlusCircle: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+          ),
+          ChevronRight: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          ),
+          RefreshCw: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+          ),
+          Share2: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+          ),
+          Terminal: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+          ),
+          Play: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+          ),
+          XCircle: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          ),
+          Award: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+            </svg>
+          ),
+          BookOpen: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+          ),
+          Target: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+            </svg>
+          )
+        };
+        return icons[name] || icons.Award;
+      };
+
+      // Static Game Database
+      const CURRICULUM = [
+        {
+          id: "mod_0",
+          title: "Módulo 0: Missão Inicial",
+          description: "Dê o primeiro passo no mundo da programação escrevendo seu primeiro script em JavaScript.",
+          unlocked: true,
+          completed: false,
+          iconName: "Compass",
+          lessons: [{
+            id: "l_0_1",
+            title: "O que é JavaScript?",
+            description: "Introdução ao papel do JavaScript na Web e o uso de console.log.",
+            content: "### O que é o JavaScript?\\nO **JavaScript (JS)** é a linguagem que torna as páginas da web interativas. Enquanto o HTML define a estrutura e o CSS define o estilo, o JavaScript dá **comportamento** e vida às páginas!\\n\\n### Introdução ao console.log\\nA ferramenta mais básica do desenvolvedor é o `console.log()`. Ele é usado para imprimir informações diretamente no console de depuração do navegador ou servidor.\\n\\n```javascript\\nconsole.log(\"Olá Mundo!\");\\n```\\n\\nVamos escrever seu primeiro 'Hello World' na aba de Desafios ao lado para prosseguir!",
+            snippet: "console.log('Olá Mundo!');"
+          }],
+          challenges: [{
+            id: "initial_mission",
+            title: "Sua Primeira Missão",
+            description: "Escreva seu primeiro comando JavaScript.",
+            question: "Use a instrução 'console.log' para exibir o texto 'Hello World' na tela. Não esqueça de fechar com parênteses e colocar as aspas adequadamente.",
+            template: "// Digite abaixo seu primeiro comando\nconsole.log('Hello World');",
+            expectedKeywords: ["console.log", "Hello World"],
+            isCompleted: false
+          }]
+        },
+        {
+          id: "mod_1",
+          title: "Módulo 1: Variáveis e Tipos",
+          description: "Aprenda a armazenar valores, nomear referências e usar tipos primitivos de dados.",
+          unlocked: false,
+          completed: false,
+          iconName: "Variable",
+          lessons: [{
+            id: "l_1_1",
+            title: "Declarando Variáveis com let e const",
+            description: "A diferença fundamental entre valores modificáveis e variáveis estáticas.",
+            content: "### O que são Variáveis?\\nVariáveis são caixas rotuladas para guardar dados. No JS moderno, usamos:\\n\\n1. **`let`**: Valores mutáveis.\\n2. **`const`**: Constantes imutáveis após inicializadas.\\n\\n```javascript\\nlet saldo = 100;\\nsaldo = 120; // Válido!\\n\\nconst pi = 3.1415;\\n// pi = 3; // Erro!\\n```\\n\\n### Tipos primitivos\\n- **String**: Linhas de texto.\\n- **Number**: Inteiros ou decimais.\\n- **Boolean**: `true` ou `false`.",
+            snippet: "let nome = \"Carlos\";\nconst idade = 20;"
+          }],
+          challenges: [{
+            id: "var_decl",
+            title: "Crie suas Próprias Variáveis",
+            description: "Pratique a criação de let e const.",
+            question: "Declare uma variável usando 'let' chamada 'nome_aprendiz' com qualquer nome em texto, e uma constante 'pontuacao' definida de início com o valor numérico '100'.",
+            template: "// Escreva seu código de declarações aqui\n",
+            expectedKeywords: ["let", "const", "nome_aprendiz", "pontuacao"],
+            isCompleted: false
+          }]
+        },
+        {
+          id: "mod_2",
+          title: "Módulo 2: Funções Poderosas",
+          description: "Organize seus scripts em blocos de códigos reutilizáveis que realizam ações e retornam valores.",
+          unlocked: false,
+          completed: false,
+          iconName: "Zap",
+          lessons: [{
+            id: "l_2_1",
+            title: "O que são Funções?",
+            description: "Entenda parâmetros, retornos e a sintaxe clássica versus arrow functions.",
+            content: "### O que são Funções?\\nFunções são como receitas: aceitam ingredientes (parâmetros), executam instruções e retornam um bolo (retorno).\\n\\n### Sintaxe:\\n```javascript\\nfunction prepararSuco(fruta) {\\n  return \"Suco de \" + fruta;\\n}\\n```\\n\\nSempre use a palavra-chave **`return`** para retornar valores, ou ela retornará `undefined`!",
+            snippet: "function somar(a, b) {\n  return a + b;\n}"
+          }],
+          challenges: [{
+            id: "func_decl",
+            title: "Sua Primeira Função de Retorno",
+            description: "Crie uma lógica para somar valores.",
+            question: "Crie uma função declarada tradicionalmente chamada 'calcularDobro' que aceita um parâmetro numérico (ex: 'numero') e retorna o dobro desse número.",
+            template: "function calcularDobro(numero) {\n  // Escreva o return aqui\n}",
+            expectedKeywords: ["function", "return", "calcularDobro"],
+            isCompleted: false
+          }]
+        },
+        {
+          id: "mod_3",
+          title: "Módulo 3: Tomada de Decisão & Loops",
+          description: "Ensine seu código a agir de modos diferentes com if/else e repetir tarefas usando loops estruturados.",
+          unlocked: false,
+          completed: false,
+          iconName: "Repeat",
+          lessons: [{
+            id: "l_3_1",
+            title: "Condicionais e Loops",
+            description: "Tomando decisões de fluxo com if/else e loops de repetição.",
+            content: "### Condicionais\\nO bloco `if` executa se a condição for verdadeira. Se falsa, passa ao `else`.\\n\\n```javascript\\nif (temperatura > 30) {\\n  console.log(\"Está muito quente!\");\\n} else {\\n  console.log(\"Está ameno.\");\\n}\\n```\\n\\n### Loops: O clássico 'for'\\nUse loops para repetir tarefas autonomamente:\\n\\n```javascript\\nfor (let i = 0; i < 3; i++) {\\n  console.log(i);\\n}\\n```",
+            snippet: "for (let i = 1; i <= 5; i++) {\n  console.log(i);\n}"
+          }],
+          challenges: [{
+            id: "loops",
+            title: "Repetindo Mensagens no Console",
+            description: "Pratique loops básicos.",
+            question: "Desenvolva um loop 'for' simples que conta de 1 a 3. Em cada iteração, mostre a contagem no console usando 'console.log(i)'.",
+            template: "// Desenvolva o bloco for aqui de 1 a 3\n",
+            expectedKeywords: ["for", "console.log"],
+            isCompleted: false
+          }]
+        },
+        {
+          id: "mod_4",
+          title: "Módulo 4: Manipulação de DOM",
+          description: "Torne-se capaz de alterar textos de páginas HTML, reagir a cliques de botões e estilizar elementos.",
+          unlocked: false,
+          completed: false,
+          iconName: "MousePointer",
+          lessons: [{
+            id: "l_4_1",
+            title: "Interagindo com Páginas Web",
+            description: "Busque elementos no browser e responda com eventos de clique.",
+            content: "### O que é o DOM?\\nO **DOM** é a representação do HTML em memória. A variável global `document` é nossa ponte para falar com ele.\\n\\n- `document.querySelector('.classe')`\\n- `document.getElementById('id')`\\n\\n### Ouvindo cliques\\n```javascript\\nbotao.addEventListener(\"click\", () => {\\n  console.log('Clicado!');\\n});\\n```",
+            snippet: "const elem = document.querySelector('.btn');\nelem.textContent = 'Avançar';"
+          }],
+          challenges: [{
+            id: "dom_select",
+            title: "Simule interações de DOM",
+            description: "Capture cliques utilizando seletores.",
+            question: "Selecione o elemento com a classe '.botao-avancar' em uma const chamada 'botao' usando querySelector, e adicione um ouvinte de clique que mostre 'DOM ativo' no console.",
+            template: "// Declare a const botao e chame o addEventListener\n",
+            expectedKeywords: ["document.querySelector", ".botao-avancar", "addEventListener", "click"],
+            isCompleted: false
+          }]
+        },
+        {
+          id: "mod_5",
+          title: "Módulo 5: Comunicação com APIs",
+          description: "Obtenha dados do mundo real em servidores externos através de requisições assíncronas.",
+          unlocked: false,
+          completed: false,
+          iconName: "Globe",
+          lessons: [{
+            id: "l_5_1",
+            title: "Async/Await e Fetch",
+            description: "Requisite informações da internet sem travar a tela.",
+            content: "### Comunicação Assíncrona\\nPara buscar itens da internet, usamos `fetch()`, que retorna uma **Promise** (resposta futura).\\n\\n### Async / Await\\nForma moderna de gerenciar operações assíncronas:\\n\\n```javascript\\nasync function obterUsuarios() {\\n  const resposta = await fetch(\"url\");\\n  const dados = await resposta.json();\\n  return dados;\\n}\\n```",
+            snippet: "async function carregar() {\n  const res = await fetch('url');\n  return await res.json();\n}"
+          }],
+          challenges: [{
+            id: "fetch_api",
+            title: "Seu primeiro fetch assíncrono",
+            description: "Capture dados remotos.",
+            question: "Crie uma função assíncrona usando 'async function' chamada 'obterUsuarios' que faz fetch no endereço fictício 'https://api.usuarios.com', use await para receber o json e retorne o resultado final.",
+            template: "async function obterUsuarios() {\n  // Implemente o fetch e retorno\n}",
+            expectedKeywords: ["async function", "fetch", "await", "return"],
+            isCompleted: false
+          }]
+        }
+      ];
+
+      const INITIAL_ACHIEVEMENTS = [
+        { id: "hello_world", title: "Primeiro Script", description: "Escreveu 'Hello World' com sucesso no console.", iconName: "CheckCircle", unlocked: false, rarity: "Comum" },
+        { id: "var_master", title: "Mestre das Caixas", description: "Declarou variáveis let e const corretas.", iconName: "Variable", unlocked: false, rarity: "Comum" },
+        { id: "func_wizard", title: "Arquiteto de Funções", description: "Declarou funções estruturadas com retorno.", iconName: "Zap", unlocked: false, rarity: "Raro" },
+        { id: "loop_king", title: "Soberano dos Loops", description: "Criou rotinas autônomas de contagem.", iconName: "Repeat", unlocked: false, rarity: "Raro" },
+        { id: "dom_hacker", title: "Mestre do DOM", description: "Capturou cliques adicionando ouvintes ao navegador.", iconName: "MousePointer", unlocked: false, rarity: "Épico" },
+        { id: "api_wizard", title: "Místico Assíncrono", description: "Integrou requisições HTTP com async/await.", iconName: "Globe", unlocked: false, rarity: "Lendário" },
+        { id: "goal_reached", title: "Meta Diária Batida", description: "Estudou por tempo suficiente no dia.", iconName: "Award", unlocked: false, rarity: "Comum" }
+      ];
+
+      const INITIAL_POSTS = [
+        {
+          id: "post_1",
+          author: "AnaDev_JS",
+          userTitle: "🌟 Veterana",
+          avatarColor: "bg-emerald-500",
+          content: "Para quem está com dificuldades em Arrow Functions: pensem nelas como atalhos inteligentes! Se não usar as chaves '{}', o retorno é implícito, o que economiza digitação. Ex: const dobro = x => x * 2. Isso ajuda muito a simplificar o código! 😉",
+          likes: 24,
+          hasLiked: false,
+          createdAt: "Hoje às 14:15",
+          comments: [
+            { id: "c_1", author: "DevCurioso", avatarColor: "bg-cyan-500", content: "Isso clareou muito as coisas! Estava esquecendo de colocar o return quando abria chaves.", createdAt: "Hoje às 14:26" }
+          ]
+        },
+        {
+          id: "post_2",
+          author: "GatoCodificador",
+          userTitle: "🐱 Mascote JS",
+          avatarColor: "bg-amber-500",
+          content: "Use const sempre para iniciar arrays ou dicionários! Embora a estrutura interna possa sofrer pushes ou modificações de propriedades, a referência segue constante. Excelente prática! 🐾",
+          likes: 12,
+          hasLiked: false,
+          createdAt: "Ontem às 18:03",
+          comments: []
+        }
+      ];
+
+      const INITIAL_LEADERBOARD = [
+        { id: "r_1", name: "Vinicius_ProMaster", xp: 1250, level: 8, avatar: "👨‍💻" },
+        { id: "r_2", name: "Leticia_Codes", xp: 870, level: 5, avatar: "👩‍🚀" },
+        { id: "r_user", name: "Você (Aprendiz)", xp: 0, level: 0, avatar: "🦁", isCurrentUser: true },
+        { id: "r_3", name: "Isabela_Vite", xp: 190, level: 1, avatar: "👩‍💻" }
+      ];
+
+      // Simulated Tutor IA feedback Engine (Runs completely client-side!)
+      const generateLocalTutorFeedback = (challengeId, code, localOutput, localError, isSuccessful) => {
+        if (isSuccessful) {
+          switch (challengeId) {
+            case "initial_mission":
+              return {
+                success: true,
+                message: "🎉 Espetacular! Você completou sua missão inicial!",
+                explanation: "### 💡 Análise do Tutor IA\\n\\nSeu código funcionou brilhantemente! Você chamou com precisão o método `console.log()` passando a string `'Hello World'` como argumento.\\n\\n**Por que isso importa?**\\nO `console.log()` envia dados para a ferramenta de desenvolvedor do navegador. É a porta de entrada para ver seu código ganhando vida!\\n\\n🚀 **Módulo 1: Variáveis e Tipos** acaba de ser desbloqueado no seu mapa de estudos. Continue assim!"
+              };
+            case "var_decl":
+              return {
+                success: true,
+                message: "💎 Fantástico! Variáveis criadas com perfeição!",
+                explanation: "### 💡 Análise do Tutor IA\\n\\nExcelente! Você usou `let` (apropriado para valores mutáveis como o nome) e `const` (ideal para pontuações iniciais constantes).\\n\\n**Análise do código:**\\n- Declaração de `nome_aprendiz` com let: Flexível e seguro.\\n- Declaração de `pontuacao` com const: Ótimo para manter a integridade dos dados.\\n\\nContinue para as funções para empoderar ainda mais seus scripts!"
+              };
+            case "func_decl":
+              return {
+                success: true,
+                message: "🧙‍♂️ Genial! Sua primeira função está no ar!",
+                explanation: "### 💡 Análise do Tutor IA\\n\\nPerfeito! Você declarou a função de forma tradicional `calcularDobro`, configurou o parâmetro numérico e usou a palavra-chave crucial `return` para enviar o dobro de volta.\\n\\n**Dica do Tutor:**\\nSem o `return`, qualquer chamada a essa função resultaria em `undefined`. Você usou as boas práticas perfeitamente!"
+              };
+            case "loops":
+              return {
+                success: true,
+                message: "🔥 Soberano das Repetições! Loop executado perfeitamente!",
+                explanation: "### 💡 Análise do Tutor IA\\n\\nSua estrutura de repetição ficou primorosa! O loop `for` contou com precisão de 1 a 3 e os logs registraram cada etapa.\\n\\n**O que aconteceu:**\\n1. Inicialização: `let i = 1`\\n2. Condição de parada: `i <= 3`\\n3. Incremento de um em um: `i++`\\n\\nPerfeito para trabalhar com listas de dados no futuro!"
+              };
+            case "dom_select":
+              return {
+                success: true,
+                message: "🎯 Sensacional! Você conectou seu script à Web!",
+                explanation: "### 💡 Análise do Tutor IA\\n\\nExcelente trabalho! Você selecionou o botão pelo identificador de classe `.botao-avancar` e adicionou a escuta ao evento de `'click'`.\\n\\nIsso forma a espinha dorsal de qualquer site interativo moderno que você navegar no dia-a-dia!"
+              };
+            case "fetch_api":
+              return {
+                success: true,
+                message: "🏆 Lendário! Você domina o universo assíncrono!",
+                explanation: "### 💡 Análise do Tutor IA\\n\\nMeus parabéns! Criar requisições HTTP assíncronas assusta muitos iniciantes, mas você estruturou a função com `async` e as esperas com `await` perfeitamente.\\n\\nSeu código receberá informações de qualquer API mundo afora!"
+              };
+            default:
+              return {
+                success: true,
+                message: "✨ Excelente trabalho! Código validado!",
+                explanation: "### 💡 Análise do Tutor IA\\n\\nSeu script rodou limpo no motor local de testes e atendeu todos os requisitos básicos estabelecidos no desafio!"
+              };
+          }
+        } else {
+          // Erro ou critério faltante
+          let tip = "Lembre-se de revisar a sintaxe.";
+          if (localError) tip = `Verifique o erro de sintaxe reportado: **"${localError}"**`;
+          else if (challengeId === "initial_mission") tip = "Verifique se você digitou exatamente `console.log('Hello World');` com parênteses e strings.";
+          else if (challengeId === "var_decl") tip = "Certifique-se de usar `let nome_aprendiz = ...` e `const pontuacao = 100` em linhas separadas.";
+          else if (challengeId === "func_decl") tip = "Lembre-se de usar a palavra-chave `return` para devolver o dobro do parâmetro!";
+          else if (challengeId === "loops") tip = "Escreva o cabeçalho do loop: `for(let i = 1; i <= 3; i++)` e mostre o log de `i`!";
+          else if (challengeId === "dom_select") tip = "Certifique-se de configurar `botao.addEventListener('click', ...)` mostrando logs de `'DOM ativo'`.";
+          else if (challengeId === "fetch_api") tip = "Sua função deve ser declarada como `async function obterUsuarios()` e executar o `await fetch(...)` corretamente.";
+
+          return {
+            success: false,
+            message: "⚠️ Correção Pendente: Faltam alguns ajustes!",
+            explanation: `### 💡 Guia de Apoio da IA\\n\\nNão desanime! Ajustar bugs faz parte da rotina de qualquer programador sênior.\\n\\n**O que fazer a seguir:**\\n- ${tip}\\n- Observe os nomes indicados nos requisitos em amarelo.\\n- Certifique-se de testar seu código clicando em **'Rodar Código'** antes de enviá-lo.`
+          };
+        }
+      };
+
+      // Sandboxed browser code execution helper
+      const executeUserCodeInBrowser = (code, challengeId, expectedKeywords) => {
+        let loggedOutputs = [];
+        let executionError = null;
+
+        // Create console mock
+        const sandboxConsole = {
+          log: (...args) => {
+            loggedOutputs.push(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" "));
+          },
+          error: (...args) => { clickedOutputs.push("[ERRO] " + args.join(" ")); },
+          warn: (...args) => { clickedOutputs.push("[AVISO] " + args.join(" ")); }
+        };
+
+        try {
+          // Evaluation environment
+          const sandbox = new Function("console", `
+            try {
+              ${code}
+            } catch (err) {
+              throw err;
+            }
+          `);
+          sandbox(sandboxConsole);
+        } catch (err) {
+          executionError = err.message;
+        }
+
+        const combinedOutput = loggedOutputs.join("\n");
+        const lowerOutput = combinedOutput.toLowerCase();
+        const normalizedCode = code.replace(/\s+/g, " ");
+
+        // Local requirements checks
+        let success = false;
+        
+        // Match exact challenge verification rules
+        if (challengeId === "initial_mission") {
+          success = lowerOutput.includes("hello world");
+        } else if (challengeId === "var_decl") {
+          const hasVars = code.includes("let") && code.includes("const");
+          const hasNames = code.includes("nome_aprendiz") && code.includes("pontuacao");
+          success = hasVars && hasNames && !executionError;
+        } else if (challengeId === "func_decl") {
+          const hasFunc = code.includes("function") && code.includes("calcularDobro");
+          const hasReturn = code.includes("return");
+          // Evaluate return if possible by injecting a call
+          let works = false;
+          try {
+            const evalCheck = new Function(`${code}\nreturn calcularDobro(5);`);
+            works = evalCheck() === 10;
+          } catch(e){}
+          success = hasFunc && hasReturn && works;
+        } else if (challengeId === "loops") {
+          const countMatch = lowerOutput.includes("1") && lowerOutput.includes("2") && lowerOutput.includes("3");
+          success = code.includes("for") && countMatch;
+        } else if (challengeId === "dom_select") {
+          success = code.includes("document.querySelector") && code.includes(".botao-avancar") && code.includes("addEventListener");
+        } else if (challengeId === "fetch_api") {
+          success = code.includes("async") && code.includes("fetch") && code.includes("await") && code.includes("return");
+        } else {
+          success = !executionError;
+        }
+
+        // Additional match criteria
+        if (expectedKeywords && expectedKeywords.length > 0) {
+          const missing = expectedKeywords.filter(k => !code.includes(k));
+          if (missing.length > 0) success = false;
+        }
+
+        return {
+          success,
+          output: combinedOutput || "Código executado de forma silenciosa (sem logs de console).",
+          error: executionError
+        };
+      };
+
+      // MAIN APPLET COMPONENT
+      function App() {
+        // State variables
+        const [stats, setStats] = useState({
+          level: 0,
+          xp: 0,
+          streak: 1,
+          studyTimeToday: 0,
+          dailyGoal: 15,
+          hasCompletedFUX: false,
+          initialMissionCompleted: false
+        });
+
+        const [modules, setModules] = useState(CURRICULUM);
+        const [achievements, setAchievements] = useState(INITIAL_ACHIEVEMENTS);
+        const [posts, setPosts] = useState(INITIAL_POSTS);
+        const [leaderboard, setLeaderboard] = useState(INITIAL_LEADERBOARD);
+
+        const [activeTab, setActiveTab] = useState("journey");
+        const [selectedModule, setSelectedModule] = useState(null);
+        const [showGoalModal, setShowGoalModal] = useState(false);
+        const [toast, setToast] = useState(null);
+
+        // Core Workspace State inside code container
+        const [playgroundTab, setPlaygroundTab] = useState("lesson");
+        const [code, setCode] = useState("");
+        const [consoleLog, setConsoleLog] = useState("");
+        const [evalResult, setEvalResult] = useState(null);
+        const [isRunning, setIsRunning] = useState(false);
+        const [isEvaluating, setIsEvaluating] = useState(false);
+        const [tutorTip, setTutorTip] = useState(null);
+
+        // Timer simulation back-bone
+        useEffect(() => {
+          const interval = setInterval(() => {
+            setStats(prev => {
+              const updatedStudyTime = prev.studyTimeToday + 1;
+              const hasReachedGoal = updatedStudyTime >= prev.dailyGoal;
+              
+              // Unlock goal award
+              let updatedAch = [...achievements];
+              if (hasReachedGoal) {
+                updatedAch = achievements.map(ach => {
+                  if (ach.id === "goal_reached" && !ach.unlocked) {
+                    triggerToast("🏆 Incrível! Você atingiu sua meta diária de estudos!");
+                    return { ...ach, unlocked: true };
+                  }
+                  return ach;
+                });
+                setAchievements(updatedAch);
+                localStorage.setItem("js_learner_achievements", JSON.stringify(updatedAch));
+              }
+
+              const copy = { ...prev, studyTimeToday: updatedStudyTime };
+              localStorage.setItem("js_learner_stats", JSON.stringify(copy));
+              return copy;
+            });
+          }, 60000); // 1 Real Minute increments
+          return () => clearInterval(interval);
+        }, [achievements]);
+
+        // Load Cache on Mount
+        useEffect(() => {
+          const cachedStats = localStorage.getItem("js_learner_stats");
+          const cachedModules = localStorage.getItem("js_learner_modules");
+          const cachedAchievements = localStorage.getItem("js_learner_achievements");
+          const cachedLeaderboard = localStorage.getItem("js_learner_leaderboard");
+          const cachedPosts = localStorage.getItem("js_learner_posts");
+
+          if (cachedStats) setStats(JSON.parse(cachedStats));
+          if (cachedModules) setModules(JSON.parse(cachedModules));
+          if (cachedAchievements) setAchievements(JSON.parse(cachedAchievements));
+          if (cachedLeaderboard) setLeaderboard(JSON.parse(cachedLeaderboard));
+          if (cachedPosts) setPosts(JSON.parse(cachedPosts));
+        }, []);
+
+        const triggerToast = (msg) => {
+          setToast(msg);
+          setTimeout(() => setToast(null), 4000);
+        };
+
+        const handleSaveGame = (nStats, nModules, nAchievements, nLeaderboard, nPosts) => {
+          setStats(nStats);
+          setModules(nModules);
+          setAchievements(nAchievements);
+          setLeaderboard(nLeaderboard);
+          if (nPosts) setPosts(nPosts);
+
+          localStorage.setItem("js_learner_stats", JSON.stringify(nStats));
+          localStorage.setItem("js_learner_modules", JSON.stringify(nModules));
+          localStorage.setItem("js_learner_achievements", JSON.stringify(nAchievements));
+          localStorage.setItem("js_learner_leaderboard", JSON.stringify(nLeaderboard));
+          if (nPosts) localStorage.setItem("js_learner_posts", JSON.stringify(nPosts));
+        };
+
+        const handleCloseOnboarding = () => {
+          const next = { ...stats, hasCompletedFUX: true };
+          handleSaveGame(next, modules, achievements, leaderboard, posts);
+        };
+
+        // RUN CODE LOCALLY ONLY
+        const handleRunLocally = () => {
+          setIsRunning(true);
+          setConsoleLog("Executando...");
+          setTimeout(() => {
+            const ch = selectedModule.challenges[0];
+            const result = executeUserCodeInBrowser(code, ch.id, []);
+            setConsoleLog(result.error ? `🔴 [Erro]: ${result.error}` : result.output);
+            setIsRunning(false);
+          }, 600);
+        };
+
+        // EVALUATE CODE VIA LOCAL SIMULATOR
+        const handleEvaluateSubmission = () => {
+          setIsEvaluating(true);
+          setEvalResult(null);
+          setTutorTip(null);
+
+          setTimeout(() => {
+            const ch = selectedModule.challenges[0];
+            const localResult = executeUserCodeInBrowser(code, ch.id, ch.expectedKeywords);
+            const feedback = generateLocalTutorFeedback(ch.id, code, localResult.output, localResult.error, localResult.success);
+
+            setConsoleLog(localResult.error ? `🔴 [Erro]: ${localResult.error}` : localResult.output);
+            
+            // Set evaluation panel output
+            setEvalResult({
+              success: feedback.success,
+              message: feedback.message,
+              explanation: feedback.explanation
+            });
+
+            if (feedback.success) {
+              const gainedXp = 50;
+              const newXp = stats.xp + gainedXp;
+              const calculatedLevel = Math.floor(newXp / 100);
+              const didLevelUp = calculatedLevel > stats.level;
+
+              // Complete challenge and module
+              const nextModules = modules.map(m => {
+                if (m.id === selectedModule.id) {
+                  return {
+                    ...m,
+                    completed: true,
+                    challenges: m.challenges.map(c => c.id === ch.id ? { ...c, isCompleted: true } : c)
+                  };
+                }
+                return m;
+              });
+
+              // Unlock subsequent modules
+              let unlockTarget = "";
+              if (selectedModule.id === "mod_0") unlockTarget = "mod_1";
+              else if (selectedModule.id === "mod_1") unlockTarget = "mod_2";
+              else if (selectedModule.id === "mod_2") unlockTarget = "mod_3";
+              else if (selectedModule.id === "mod_3") unlockTarget = "mod_4";
+              else if (selectedModule.id === "mod_4") unlockTarget = "mod_5";
+
+              const finalModules = nextModules.map(m => m.id === unlockTarget ? { ...m, unlocked: true } : m);
+
+              // Achievements list unlock checking
+              const nextAchievements = achievements.map(ach => {
+                let check = ach.unlocked;
+                if (ch.id === "initial_mission" && ach.id === "hello_world") check = true;
+                if (ch.id === "var_decl" && ach.id === "var_master") check = true;
+                if (ch.id === "func_decl" && ach.id === "func_wizard") check = true;
+                if (ch.id === "loops" && ach.id === "loop_king") check = true;
+                if (ch.id === "dom_select" && ach.id === "dom_hacker") check = true;
+                if (ch.id === "fetch_api" && ach.id === "api_wizard") check = true;
+
+                return check ? { ...ach, unlocked: true } : ach;
+              });
+
+              // Leaderboards updating
+              const nextLeaderboard = leaderboard.map(u => {
+                if (u.isCurrentUser) return { ...u, xp: newXp, level: calculatedLevel };
+                return u;
+              }).sort((a,b) => b.xp - a.xp);
+
+              const nextStats = {
+                ...stats,
+                xp: newXp,
+                level: calculatedLevel,
+                initialMissionCompleted: stats.initialMissionCompleted || ch.id === "initial_mission"
+              };
+
+              // Triggers celebratory alerts
+              if (didLevelUp) {
+                triggerToast(`🎉 NÍVEL EXTRA! Você subiu para o Nível ${calculatedLevel}! Continua dominando!`);
+              } else {
+                triggerToast(`✨ Sucesso! Resolvido com maestria (+50 XP)`);
+              }
+
+              // Update state locally inside rendering scope
+              setSelectedModule(prev => ({
+                ...prev,
+                completed: true,
+                challenges: prev.challenges.map(c => c.id === ch.id ? { ...c, isCompleted: true } : c)
+              }));
+
+              handleSaveGame(nextStats, finalModules, nextAchievements, nextLeaderboard, posts);
+            } else {
+              triggerToast("⚠️ Revise os requisitos indicados!");
+            }
+
+            setIsEvaluating(false);
+          }, 1000);
+        };
+
+        // TUTOR TIPS REQUESTS
+        const handleRequestTip = () => {
+          const ch = selectedModule.challenges[0];
+          let tip = "Cuidado com a ortografia. Lembre de colocar todos os parâmetros.";
+          if (ch.id === "initial_mission") tip = "Certifique-se de escrever exatamente console.log('Hello World'); prestando atenção com aspas.";
+          if (ch.id === "var_decl") tip = "Use explicitamente let nome_aprendiz = 'Texto'; e na outra linha const pontuacao = 100;";
+          if (ch.id === "func_decl") tip = "Declare a função com a sintaxe tradicional de chaves e return numero * 2;";
+          if (ch.id === "loops") tip = "O laço for precisa ter a seguinte estrutura: (let i = 1; i <= 3; i++)";
+          if (ch.id === "dom_select") tip = "Armazenebotao com querySelector('.botao-avancar') e adicione o ouvinte click!";
+          if (ch.id === "fetch_api") tip = "Não esqueça de marcar a função como async, e chamar await fetch('http...');";
+
+          setTutorTip(tip);
+        };
+
+        const handleSimulateStudyMins = () => {
+          const nStats = { ...stats, studyTimeToday: stats.studyTimeToday + 5 };
+          triggerToast("⚡ Simulado +5 minutos de foco nos estudos!");
+          handleSaveGame(nStats, modules, achievements, leaderboard, posts);
+        };
+
+        const handleSetGoalValue = (val) => {
+          const nStats = { ...stats, dailyGoal: val };
+          setShowGoalModal(false);
+          triggerToast(`🎯 Meta diária ajustada para ${val} minutos!`);
+          handleSaveGame(nStats, modules, achievements, leaderboard, posts);
+        };
+
+        // FORUM INTERACTIONS
+        const handleLikePost = (postId) => {
+          const nextPosts = posts.map(p => {
+            if (p.id === postId) {
+              const liked = !p.hasLiked;
+              return { ...p, likes: liked ? p.likes + 1 : p.likes - 1, hasLiked: liked };
+            }
+            return p;
+          });
+          handleSaveGame(stats, modules, achievements, leaderboard, nextPosts);
+        };
+
+        const handleAddForumPost = (text, codeSnippet) => {
+          const nPost = {
+            id: "p_" + Date.now(),
+            author: "Você (Aprendiz)",
+            userTitle: "🦁 Novato",
+            avatarColor: "bg-cyan-500",
+            content: text,
+            codeSnippet: codeSnippet || undefined,
+            likes: 0,
+            hasLiked: false,
+            createdAt: "Agora mesmo",
+            comments: []
+          };
+          const next = [nPost, ...posts];
+          triggerToast("📝 Postagem pública criada com sucesso!");
+          handleSaveGame(stats, modules, achievements, leaderboard, next);
+
+          // Simulated fast student response
+          setTimeout(() => {
+            setPosts(prev => {
+              const updated = prev.map(p => {
+                if (p.id === nPost.id) {
+                  return {
+                    ...p,
+                    comments: [{
+                      id: "sc_1",
+                      author: "GatoCodificador",
+                      avatarColor: "bg-amber-500",
+                      content: "Uow, excelente reflexão! Continuamos juntos nessa jornada de código! 🐾",
+                      createdAt: "Há poucos segundos"
+                    }]
+                  };
+                }
+                return p;
+              });
+              localStorage.setItem("js_learner_posts", JSON.stringify(updated));
+              return updated;
+            });
+          }, 3000);
+        };
+
+        const handleAddPostComment = (postId, cText) => {
+          const next = posts.map(p => {
+            if (p.id === postId) {
+              return {
+                ...p,
+                comments: [...p.comments, {
+                  id: "uc_" + Date.now(),
+                  author: "Você (Aprendiz)",
+                  avatarColor: "bg-cyan-500",
+                  content: cText,
+                  createdAt: "Agora mesmo"
+                }]
+              };
+            }
+            return p;
+          });
+          handleSaveGame(stats, modules, achievements, leaderboard, next);
+        };
+
+        const handleShareSolutionToForum = () => {
+          const challengeTitle = selectedModule.challenges[0].title;
+          const body = `Veja minha solução para o desafio de JavaScript de "${challengeTitle}"! Consegui solucionar e ganhar meus XP.`;
+          handleAddForumPost(body, code);
+          setActiveTab("community");
+        };
+
+        const activeModuleChallenge = selectedModule ? selectedModule.challenges[0] : null;
+        const currentActiveNodeId = stats.initialMissionCompleted ? "mod_1" : "mod_0";
+
+        return (
+          <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans transition-all">
+            {/* Onboarding Welcome Tutorial Modal */}
+            {!stats.hasCompletedFUX && (
+              <div className="fixed inset-0 bg-zinc-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                <div className="bg-zinc-900 border border-zinc-800 max-w-md w-full rounded-[2rem] p-6 text-center animate-float relative overflow-hidden">
+                  <div className="absolute -right-12 -top-12 w-32 h-32 bg-yellow-400/5 blur-xl rounded-full" />
+                  <div className="w-16 h-16 rounded-full bg-zinc-950 border border-zinc-800 flex items-center justify-center mx-auto mb-4">
+                    <Icon name="Star" className="w-8 h-8 text-yellow-400" />
+                  </div>
+                  <h3 className="text-xl font-black text-zinc-100 mb-2">Bem-vindo à Trilha de JS! 🚀</h3>
+                  <p className="text-zinc-400 text-xs leading-relaxed mb-4">
+                    Aprenda JavaScript cumprindo desafios de código interativos. A cada vitória você ganha 50 XP, destrava novas medalhas e sobe na liga de aprendizes semanais!
+                  </p>
+                  <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-800/60 mb-5">
+                    <span className="text-[10px] text-zinc-500 font-mono block uppercase">Como começar:</span>
+                    <span className="text-xs text-yellow-400 font-medium">Resolva o 'Módulo 0: Missão Inicial' no centro para liberar a trilha principal!</span>
+                  </div>
+                  <button
+                    onClick={handleCloseOnboarding}
+                    className="w-full bg-yellow-400 hover:bg-yellow-350 text-zinc-950 font-extrabold text-xs py-3.5 rounded-xl uppercase tracking-wider transition-colors shadow-lg shadow-yellow-400/10"
+                  >
+                    Entrar na Arena!
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Celebrations Toast Overlay */}
+            {toast && (
+              <div className="fixed bottom-6 right-6 z-50 bg-yellow-400 text-zinc-950 border border-yellow-300 font-bold px-4 py-3 rounded-xl text-xs flex items-center gap-2 shadow-xl shadow-yellow-500/10">
+                <Icon name="Sparkles" className="w-4 h-4 animate-spin shrink-0 text-zinc-950" />
+                <span>{toast}</span>
+              </div>
+            )}
+
+            {/* Main Navbar */}
+            <header className="sticky top-0 z-40 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-900 px-4 md:px-8 py-3.5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-yellow-400 flex items-center justify-center border border-yellow-300 shadow-[0_0_15px_rgba(250,204,21,0.2)]">
+                  <span className="font-extrabold text-zinc-950 font-sans text-xl">JS</span>
+                </div>
+                <div>
+                  <h1 className="text-xs font-black uppercase tracking-wider">Aprenda JavaScript</h1>
+                  <span className="text-[9px] text-yellow-500 font-mono uppercase tracking-wider block">Trilha Interativa de Aprendizagem</span>
+                </div>
+              </div>
+
+              {/* Top Menu Metrics */}
+              <div className="flex items-center gap-2 sm:gap-4">
+                <div className="hidden sm:flex items-center gap-2 bg-zinc-900/50 border border-zinc-800 px-3 py-1 rounded-full">
+                  <Icon name="Trophy" className="w-3.5 h-3.5 text-yellow-500" />
+                  <span className="text-[11px] font-bold font-mono">Nvl {stats.level}</span>
+                  <div className="w-1 h-1 bg-zinc-700 rounded-full" />
+                  <span className="text-[10px] text-zinc-400">{stats.xp} XP</span>
+                </div>
+
+                <div className="flex items-center gap-1.5 bg-orange-950/20 border border-orange-500/15 px-3 py-1 rounded-full text-orange-400">
+                  <Icon name="Flame" className="w-3.5 h-3.5" />
+                  <span className="text-[11px] font-mono font-bold">{stats.streak} Dias</span>
+                </div>
+
+                <div className="flex items-center gap-1.5 bg-yellow-400/5 border border-yellow-400/10 px-3 py-1 rounded-full text-yellow-400" title="Tempo diário focado">
+                  <Icon name="Target" className="w-3.5 h-3.5" />
+                  <span className="text-[11px] font-mono font-bold">{Math.min(100, Math.floor((stats.studyTimeToday / stats.dailyGoal)*100))}%</span>
+                </div>
+              </div>
+            </header>
+
+            {/* Layout Grid */}
+            <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+              
+              {/* SIDE CONTROLS AND STATS */}
+              <aside className="lg:col-span-1 space-y-4">
+                {/* Onboarding info card */}
+                <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 relative overflow-hidden shadow-lg">
+                  <div className="absolute right-0 top-0 w-24 h-24 bg-yellow-400/5 blur-xl rounded-full" />
+                  <span className="bg-zinc-950 text-yellow-400 border border-zinc-805 text-[8px] font-bold px-2 py-0.5 rounded uppercase tracking-widest block mb-2 w-max">
+                    Meu Treinamento
+                  </span>
+                  <h4 className="text-xs font-bold text-zinc-200">Próximo objetivo:</h4>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed mt-1">
+                    Complete lições teóricas e use as restrições indicadas para ganhar insígnias raras!
+                  </p>
+                  
+                  <div className="mt-3.5 space-y-2 pt-3 border-t border-zinc-800/80">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border ${stats.initialMissionCompleted ? "bg-yellow-400 border-yellow-400 text-zinc-950":"border-zinc-800"}`}>
+                        {stats.initialMissionCompleted && <span className="text-[9px] font-bold">✓</span>}
+                      </div>
+                      <span className={`text-[11px] ${stats.initialMissionCompleted ? "text-zinc-500 line-through" : "text-zinc-300"}`}>Missão Inicial (Módulo 0)</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border ${stats.studyTimeToday >= stats.dailyGoal ? "bg-yellow-400 border-yellow-400 text-zinc-950":"border-zinc-800"}`}>
+                        {stats.studyTimeToday >= stats.dailyGoal && <span className="text-[9px] font-bold">✓</span>}
+                      </div>
+                      <span className={`text-[11px] ${stats.studyTimeToday >= stats.dailyGoal ? "text-zinc-500 line-through" : "text-zinc-300"}`}>
+                        Meta de Estudo ({stats.studyTimeToday}/{stats.dailyGoal} min)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Left Drawer tab links */}
+                <nav className="bg-zinc-900 border border-zinc-800 p-2.5 rounded-3xl flex flex-col gap-1 shadow-lg">
+                  <button
+                    onClick={() => { setActiveTab("journey"); setSelectedModule(null); }}
+                    className={`w-full text-left px-3.5 py-3 rounded-2xl text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-2.5 transition-all ${
+                      activeTab === "journey" && !selectedModule ? "bg-yellow-400 text-zinc-950 font-black shadow-md shadow-yellow-400/10" : "text-zinc-400 hover:bg-zinc-850 hover:text-zinc-200"
+                    }`}
+                  >
+                    <Icon name="Compass" className="w-4 h-4" />
+                    Mapa de Estudos
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab("community"); setSelectedModule(null); }}
+                    className={`w-full text-left px-3.5 py-3 rounded-2xl text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-2.5 transition-all ${
+                      activeTab === "community" ? "bg-yellow-400 text-zinc-950 font-black shadow-md shadow-yellow-400/10" : "text-zinc-400 hover:bg-zinc-850 hover:text-zinc-200"
+                    }`}
+                  >
+                    <Icon name="MessageSquare" className="w-4 h-4" />
+                    Fórum da Comunidade
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab("profile"); setSelectedModule(null); }}
+                    className={`w-full text-left px-3.5 py-3 rounded-2xl text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-2.5 transition-all ${
+                      activeTab === "profile" ? "bg-yellow-400 text-zinc-950 font-black shadow-md shadow-yellow-400/10" : "text-zinc-400 hover:bg-zinc-850 hover:text-zinc-200"
+                    }`}
+                  >
+                    <Icon name="User" className="w-4 h-4" />
+                    Estatísticas & Títulos
+                  </button>
+                </nav>
+              </aside>
+
+              {/* MAIN CONTENT AREA */}
+              <section className="lg:col-span-3 space-y-6">
+                
+                {/* 1. STUDY MAP JOURNEY */}
+                {activeTab === "journey" && !selectedModule && (
+                  <div className="space-y-6">
+                    <div className="bg-zinc-900 border border-zinc-800 p-6 md:p-8 rounded-[2.2rem] relative overflow-hidden shadow-lg">
+                      <div className="absolute -right-20 -top-20 w-52 h-52 bg-yellow-400/5 blur-[50px] rounded-full" />
+                      <h2 className="text-xl font-black text-zinc-100 flex items-center gap-2">
+                        Trilha de Aprendizagem
+                      </h2>
+                      <p className="text-xs text-zinc-400 mt-1 max-w-xl leading-relaxed">
+                        Complete os módulos práticos em sequência para desbloquear lições interativas no console. Resolva os desafios teóricos para provar seus conhecimentos!
+                      </p>
+                    </div>
+
+                    {/* Pathway map rendering */}
+                    <div className="relative w-full py-6">
+                      <div className="absolute top-0 bottom-0 left-10 md:left-1/2 w-0.5 -translate-x-1/2 bg-zinc-800 hidden md:block" />
+                      
+                      <div className="space-y-8 flex flex-col md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 relative">
+                        {modules.map((mod, index) => {
+                          const isActive = mod.id === currentActiveNodeId;
+                          const isUnlocked = mod.unlocked;
+                          const isCompleted = mod.completed;
+
+                          return (
+                            <div
+                              key={mod.id}
+                              className={`bg-zinc-90 w bg-zinc-900 border border-zinc-800/60 p-5 rounded-3xl flex flex-col justify-between transition-all relative ${
+                                isUnlocked? "hover:border-zinc-700":"opacity-50 select-none"
+                              }`}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center border ${
+                                  isActive
+                                    ? "bg-yellow-400/10 border-yellow-400 text-yellow-400 animate-pulse-ring"
+                                    : isCompleted
+                                    ? "bg-yellow-400 border-yellow-400 text-zinc-950"
+                                    : isUnlocked
+                                    ? "bg-zinc-950 border-zinc-800 text-zinc-200"
+                                    : "bg-zinc-950 border-zinc-900 text-zinc-650"
+                                }`}>
+                                  <Icon name={mod.iconName} className="w-5 h-5" />
+                                </div>
+                                <span className="text-[10px] text-zinc-550 font-mono font-bold">MÓDULO {index}</span>
+                              </div>
+
+                              <div className="mt-4">
+                                <h4 className="text-xs font-black text-zinc-200 truncate">{mod.title.split(": ")[1] || mod.title}</h4>
+                                <p className="text-[11px] text-zinc-450 leading-relaxed mt-1">{mod.description}</p>
+                              </div>
+
+                              <div className="mt-5 pt-3.5 border-t border-zinc-850/60 flex items-center justify-between">
+                                {!isUnlocked ? (
+                                  <span className="text-[10px] text-zinc-550 font-mono flex items-center gap-1">
+                                    <Icon name="Lock" className="w-3 h-3" /> Bloqueado
+                                  </span>
+                                ) : isCompleted ? (
+                                  <span className="text-[10px] text-yellow-400 font-bold flex items-center gap-1">
+                                    <Icon name="CheckCircle" className="w-3.5 h-3.5 text-yellow-450" /> Revisar Módulo
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-zinc-400 font-mono">Disponível</span>
+                                )}
+
+                                {isUnlocked && (
+                                  <button
+                                    onClick={() => { setSelectedModule(mod); setPlaygroundTab("lesson"); setCode(mod.challenges[0].template); setEvalResult(null); setConsoleLog(""); }}
+                                    className="bg-zinc-950 hover:bg-zinc-800 border border-zinc-850 text-yellow-400 text-[10px] px-3.5 py-1.5 rounded-lg font-bold uppercase tracking-wider"
+                                  >
+                                    {isCompleted ? "Rever lição" : "Iniciar →"}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. ENHANCED CODE PLAYGROUND SECTION */}
+                {activeTab === "journey" && selectedModule && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => setSelectedModule(null)}
+                        className="text-xs text-yellow-400 font-bold hover:underline flex items-center gap-1"
+                      >
+                        ← Voltar ao Mapa de Estudos
+                      </button>
+                      <span className="text-[11px] text-zinc-500 font-mono font-medium">Lição Ativa</span>
+                    </div>
+
+                    {/* Integrated compiler frame */}
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] shadow-xl overflow-hidden flex flex-col min-h-[500px]">
+                      {/* Playground header tabs */}
+                      <div className="bg-zinc-950 border-b border-zinc-850 px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div>
+                          <span className="text-[9px] text-yellow-500 font-mono tracking-widest block uppercase">Móludo de Estudo Especializado</span>
+                          <h3 className="text-sm font-black text-zinc-200 mt-0.5">{selectedModule.title}</h3>
+                        </div>
+
+                        {/* Mode selectors */}
+                        <div className="bg-zinc-900 p-1 border border-zinc-800 rounded-xl flex">
+                          <button
+                            onClick={() => setPlaygroundTab("lesson")}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all tracking-wider flex items-center gap-1.5 ${
+                              playgroundTab === "lesson" ? "bg-yellow-400 text-zinc-950 font-black":"text-zinc-400"
+                            }`}
+                          >
+                            <Icon name="BookOpen" className="w-3.5 h-3.5" /> Teoria
+                          </button>
+                          <button
+                            onClick={() => setPlaygroundTab("editor")}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all tracking-wider flex items-center gap-1.5 ${
+                              playgroundTab === "editor" ? "bg-yellow-400 text-zinc-950 font-black":"text-zinc-400"
+                            }`}
+                          >
+                            <Icon name="Terminal" className="w-3.5 h-3.5" /> Desafio
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Playground Split Window */}
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+                        
+                        {/* LEFT COLUMN: THEORY OR EXERCISE */}
+                        <div className="border-r border-zinc-850 p-5 overflow-y-auto max-h-[460px] prose-slate">
+                          {playgroundTab === "lesson" ? (
+                            <div className="space-y-4">
+                              <h4 className="text-sm font-bold text-zinc-105 border-b border-zinc-850 pb-2">Conteúdo Didático</h4>
+                              
+                              <div className="text-zinc-300 text-xs leading-relaxed space-y-4">
+                                {selectedModule.lessons[0].content.split("\\n\\n").map((chunk, itemIdx) => {
+                                  if (chunk.startsWith("### ")) {
+                                    return <h5 key={itemIdx} className="text-sm font-bold text-zinc-100 mt-4">{chunk.replace("### ", "")}</h5>;
+                                  }
+                                  if (chunk.startsWith("```")) {
+                                    return (
+                                      <pre key={itemIdx} className="bg-zinc-950 p-2.5 rounded-xl border border-zinc-800 font-mono text-[11px] text-yellow-400 overflow-x-auto block">
+                                        <code>{chunk.replace(/```javascript|```/g, "").trim()}</code>
+                                      </pre>
+                                    );
+                                  }
+                                  return <p key={itemIdx}>{chunk}</p>;
+                                })}
+                              </div>
+
+                              <div className="pt-4 border-t border-zinc-850">
+                                <button
+                                  onClick={() => setPlaygroundTab("editor")}
+                                  className="w-full bg-yellow-400 hover:bg-yellow-350 text-zinc-950 text-xs font-extrabold uppercase py-3 rounded-xl flex items-center justify-center gap-1"
+                                >
+                                  Ir para Desafio prático <Icon name="ChevronRight" className="w-4 h-4 text-zinc-950" />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <span className="bg-zinc-950 text-yellow-400 text-[9px] font-bold font-mono px-2 py-0.5 rounded border border-zinc-800 uppercase block w-max">
+                                Desafio Técnico
+                              </span>
+                              <h4 className="text-sm font-black text-zinc-200">{activeModuleChallenge.title}</h4>
+                              <p className="text-xs text-zinc-300 bg-zinc-950/60 p-3.5 rounded-xl border border-zinc-850 leading-relaxed font-medium">
+                                {activeModuleChallenge.question}
+                              </p>
+
+                              {/* Target fields checking */}
+                              <div>
+                                <span className="text-[10px] text-zinc-550 font-mono block uppercase mb-1">Palavras recomendadas pelo tutor:</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {activeModuleChallenge.expectedKeywords.map(k => (
+                                    <span key={k} className="bg-zinc-950 text-zinc-400 font-mono text-[11px] px-2.5 py-0.5 rounded border border-zinc-850">{k}</span>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* AI tips triggers */}
+                              <div className="pt-2">
+                                <button
+                                  onClick={handleRequestTip}
+                                  className="bg-zinc-950 hover:bg-zinc-800 border border-zinc-850 text-zinc-350 px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5"
+                                >
+                                  <Icon name="Sparkles" className="w-3.5 h-3.5 text-yellow-400" />
+                                  Pedir Dica (Tutor Inteligente)
+                                </button>
+
+                                {tutorTip && (
+                                  <div className="mt-3.5 bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl text-xs text-yellow-400 leading-relaxed font-medium">
+                                    💡 <strong>Dica de Ouro:</strong> {tutorTip}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* RIGHT COLUMN: CODE AREA & TERMINAL */}
+                        <div className="flex flex-col bg-zinc-950">
+                          <div className="bg-zinc-90 w bg-zinc-900 border-b border-zinc-850 p-2.5 flex items-center justify-between">
+                            <span className="text-xs font-mono text-zinc-400 flex items-center gap-1.5">
+                              <Icon name="Terminal" className="w-3.5 h-3.5 text-zinc-450" /> index.js
+                            </span>
+                            <button
+                              onClick={() => { setCode(activeModuleChallenge.template); setEvalResult(null); setConsoleLog(""); }}
+                              className="text-[10px] text-zinc-400 hover:text-zinc-200 flex items-center gap-1"
+                            >
+                              <Icon name="RefreshCw" className="w-3 h-3" /> Resetar
+                            </button>
+                          </div>
+
+                          <textarea
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                            className="flex-1 bg-zinc-950 text-yellow-400 font-mono text-xs leading-6 p-4 resize-none focus:outline-none focus:ring-0 min-h-[200px]"
+                            placeholder="// Escreva seu script javascript aqui para completar a meta..."
+                          />
+
+                          {/* Terminal output box */}
+                          <div className="bg-zinc-900 border-t border-zinc-850 p-3.5">
+                            <span className="text-[10px] text-zinc-500 font-mono block mb-1.5 uppercase">Retorno do Terminal:</span>
+                            <div className="bg-zinc-950 text-zinc-200 border border-zinc-850 p-2.5 rounded font-mono text-xs min-h-[60px] max-h-[100px] overflow-y-auto leading-relaxed">
+                              {consoleLog ? (
+                                <pre className="whitespace-pre-wrap">{consoleLog}</pre>
+                              ) : (
+                                <span className="text-zinc-650 italic">Console silencioso. Clique em 'Rodar Código' para ver os logs.</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Trigger buttons */}
+                          <div className="bg-zinc-900/40 p-3.5 border-t border-zinc-850 flex items-center gap-2">
+                            <button
+                              onClick={handleRunLocally}
+                              disabled={isRunning}
+                              className="bg-zinc-800 hover:bg-zinc-750 text-zinc-300 font-bold text-xs px-3.5 py-3 rounded-xl transition-all uppercase flex items-center gap-1"
+                            >
+                              <Icon name="Play" className="w-3.5 h-3.5 text-zinc-300" /> Testar logs
+                            </button>
+
+                            <button
+                              onClick={handleEvaluateSubmission}
+                              disabled={isEvaluating}
+                              className="flex-1 bg-yellow-400 hover:bg-yellow-350 text-zinc-950 font-extrabold text-xs py-3 rounded-xl transition-all uppercase tracking-wider flex items-center justify-center gap-1 pl-4"
+                            >
+                              <Icon name="Send" className="w-3.5 h-3.5 text-zinc-950" />
+                              {isEvaluating ? "Validando..." : "Validar Desafio com IA"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* TUTOR OUTCOME RESULT PANEL */}
+                      {evalResult && (
+                        <div className={`p-5 border-t transition-all ${
+                          evalResult.success ? "bg-yellow-500/5 border-yellow-500/20":"bg-rose-500/5 border-rose-500/20"
+                        }`}>
+                          <div className="flex items-start gap-3">
+                            <div className="mt-0.5 shrink-0">
+                              <Icon name={evalResult.success ? "CheckCircle2":"XCircle"} className={`w-5 class h-5 ${evalResult.success ? "text-yellow-400 animate-bounce":"text-rose-400"}`} />
+                            </div>
+                            <div className="space-y-2">
+                              <h4 className={`text-xs font-black uppercase ${evalResult.success ? "text-yellow-450":"text-rose-400"}`}>{evalResult.success ? "Completado com Sucesso!":"Ajustes Recomentados pelo Tutor"}</h4>
+                              <p className="text-xs text-zinc-200 font-bold leading-relaxed">{evalResult.message}</p>
+                              
+                              <div className="text-[11px] text-zinc-350 leading-relaxed bg-zinc-950/80 border border-zinc-850 p-3 rounded-xl max-h-[140px] overflow-y-auto">
+                                {evalResult.explanation.split("\\n\\n").map((part, pIdx) => {
+                                  if (part.startsWith("### ")) return <h5 key={pIdx} className="font-bold text-zinc-100 mb-1 mt-2">{part.replace("### ", "")}</h5>;
+                                  return <p key={pIdx} className="mb-2">{part}</p>;
+                                })}
+                              </div>
+
+                              {evalResult.success && (
+                                <div className="pt-2">
+                                  <button
+                                    onClick={handleShareSolutionToForum}
+                                    className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-750 text-zinc-250 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1 cursor-pointer transition-colors"
+                                  >
+                                    <Icon name="Share2" className="w-3.5 h-3.5 text-yellow-450" /> Compartilhar soluçao com Alunos
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. COMMUNITY DISCUSSION FORUM */}
+                {activeTab === "community" && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-6 md:p-8 rounded-[2.2rem] relative overflow-hidden shadow-lg">
+                      <div className="absolute -right-16 -top-16 w-52 h-52 bg-yellow-400/5 blur-[50px] rounded-full" />
+                      <div>
+                        <span className="text-[9px] text-yellow-400 font-mono tracking-widest block uppercase">Comunidade de Alunos</span>
+                        <h3 className="text-sm font-black text-zinc-200 mt-1">Fórum de Estudos</h3>
+                        <p className="text-[11px] text-zinc-450 mt-1 max-w-xl">Tire dúvidas, mande sugestões de solução, ajude colegas e interaja em tempo real.</p>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          const val = prompt("O que deseja postar?");
+                          if (val) handleAddForumPost(val);
+                        }}
+                        className="bg-yellow-400 hover:bg-yellow-350 text-zinc-950 font-black text-xs px-4 py-3 rounded-xl uppercase tracking-wider shrink-0"
+                      >
+                        Criar Post
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {posts.map(p => (
+                        <div key={p.id} className="bg-zinc-900 border border-zinc-805 p-5 rounded-[2rem] space-y-3.5 shadow-md">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                              <div className={`w-8 h-8 rounded-full ${p.avatarColor || "bg-zinc-800"} flex items-center justify-center font-bold text-zinc-950 text-xs`}>
+                                {p.author[0].toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs font-bold text-zinc-200">{p.author}</span>
+                                  {p.userTitle && <span className="bg-zinc-950 text-yellow-400 font-mono text-[9px] px-2 py-0.5 rounded border border-zinc-850">{p.userTitle}</span>}
+                                </div>
+                                <span className="text-[10px] text-zinc-550 block font-mono mt-0.5">{p.createdAt}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <p className="text-xs text-zinc-300 leading-relaxed font-normal">{p.content}</p>
+
+                          {p.codeSnippet && (
+                            <pre className="bg-zinc-950 text-yellow-405 border border-zinc-850 p-3 rounded-xl font-mono text-[11px] overflow-x-auto block">
+                              <code>{p.codeSnippet}</code>
+                            </pre>
+                          )}
+
+                          <div className="flex items-center gap-4 pt-2.5 border-t border-zinc-850/80">
+                            <button
+                              onClick={() => handleLikePost(p.id)}
+                              className={`flex items-center gap-1.5 text-xs ${p.hasLiked ? "text-rose-450 font-bold":"text-zinc-450"}`}
+                            >
+                              <Icon name="Heart" className={`w-4 h-4 ${p.hasLiked ? "text-rose-450 fill-rose-500/20":"text-zinc-450"}`} />
+                              {p.likes} Curtidas
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                const c = prompt("Adicione seu comentário:");
+                                if (c) handleAddPostComment(p.id, c);
+                              }}
+                              className="text-zinc-450 hover:text-zinc-200 flex items-center gap-1.5 text-xs"
+                            >
+                              <Icon name="MessageSquare" className="w-4 h-4 text-zinc-450" /> Responder...
+                            </button>
+                          </div>
+
+                          {/* Comments box */}
+                          {p.comments.length > 0 && (
+                            <div className="bg-zinc-950/60 p-3.5 rounded-2xl space-y-3.5 border border-zinc-850/50">
+                              {p.comments.map(c => (
+                                <div key={c.id} className="text-xs flex gap-2">
+                                  <div className={`w-5 h-5 rounded-full ${c.avatarColor} shrink-0 text-zinc-950 flex items-center justify-center font-bold text-[9px]`}>
+                                    {c.author[0].toUpperCase()}
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-bold text-zinc-300">{c.author}</span>
+                                      <span className="text-[9px] text-[#637280]">{c.createdAt}</span>
+                                    </div>
+                                    <p className="text-zinc-400 mt-0.5 leading-relaxed">{c.content}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. STATISTICS AND ACHIEVEMENT BADGES */}
+                {activeTab === "profile" && (
+                  <div className="space-y-6">
+                    {/* Metrics row */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-[2rem] flex flex-col items-center justify-center text-center shadow">
+                        <div className="w-11 h-11 border-2 border-yellow-400 shadow shadow-yellow-500/10 text-yellow-400 rounded-full font-black text-sm flex items-center justify-center mb-1.5">
+                          {stats.level}
+                        </div>
+                        <span className="text-[10px] text-zinc-500 font-mono uppercase">Nível Atual</span>
+                        <span className="text-xs font-bold text-zinc-350 block mt-0.5">{stats.xp} Total XP</span>
+                      </div>
+
+                      <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-[2rem] flex flex-col items-center justify-center text-center shadow">
+                        <div className="w-11 h-11 bg-orange-950/20 border border-orange-500/20 text-orange-500 rounded-full flex items-center justify-center mb-1.5">
+                          <Icon name="Flame" className="w-5 h-5" />
+                        </div>
+                        <span className="text-[10px] text-zinc-500 font-mono uppercase">Ofensiva</span>
+                        <span className="text-xs font-extrabold text-orange-400 block mt-0.5">{stats.streak} Dias seguidos</span>
+                      </div>
+
+                      <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-[2rem] flex flex-col items-center justify-center text-center shadow">
+                        <div className="w-11 h-11 bg-yellow-400/5 border border-yellow-400/20 text-yellow-400 rounded-full flex items-center justify-center mb-1.5">
+                          <Icon name="Target" className="w-5 h-5" />
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] text-zinc-500 font-mono uppercase">Foco Hoje</span>
+                          <button onClick={() => setShowGoalModal(prev => !prev)} className="text-zinc-500 hover:text-yellow-400"><Icon name="Settings" className="w-3 h-3" /></button>
+                        </div>
+                        <span className="text-xs font-bold text-zinc-350 block mt-0.5">{stats.studyTimeToday} / {stats.dailyGoal} min</span>
+                      </div>
+
+                      <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-[2rem] flex flex-col items-center justify-center text-center shadow">
+                        <button
+                          onClick={handleSimulateStudyMins}
+                          className="w-11 h-11 bg-purple-950/20 border border-purple-500/20 text-purple-400 rounded-full flex items-center justify-center mb-1.5 hover:border-yellow-400 transition-colors"
+                        >
+                          ⚡
+                        </button>
+                        <span className="text-[10px] text-zinc-500 font-mono uppercase">Simular Estudo</span>
+                        <span className="text-xs font-mono text-purple-400 block mt-0.5">Adicionar +5m</span>
+                      </div>
+                    </div>
+
+                    {/* Adjust study goal modal inline drawer */}
+                    {showGoalModal && (
+                      <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-3xl space-y-3 shadow-lg">
+                        <span className="text-[10px] text-zinc-400 font-mono uppercase">Selecione o tempo da sua meta diária:</span>
+                        <div className="flex gap-2">
+                          {[5, 10, 15, 30].map(m => (
+                            <button
+                              key={m}
+                              onClick={() => handleSetGoalValue(m)}
+                              className={`flex-1 text-xs py-2 rounded-xl font-bold border transition-all ${
+                                stats.dailyGoal === m ? "bg-yellow-400 text-zinc-950 border-yellow-400 shadow-md shadow-yellow-500/15":"bg-zinc-950 hover:bg-zinc-850 border-zinc-850 text-zinc-400"
+                              }`}
+                            >
+                              {m} min
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Badges and ranking section */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="md:col-span-2 bg-zinc-900 border border-zinc-800 p-6 rounded-[2rem] shadow-lg relative overflow-hidden">
+                        <div className="absolute right-0 top-0 w-32 h-32 bg-yellow-400/5 blur-xl rounded-full" />
+                        <h4 className="text-xs font-black uppercase tracking-wider text-zinc-400 block mb-5">Medalhas e Conquistas ({achievements.filter(a => a.unlocked).length}/{achievements.length})</h4>
+                        
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          {achievements.map(ach => (
+                            <div
+                              key={ach.id}
+                              className={`border p-3 rounded-2xl flex flex-col items-center justify-center text-center relative ${
+                                ach.unlocked ? "bg-zinc-950 border-zinc-800 shadow":"bg-zinc-950/10 border-zinc-950/20 opacity-40 select-none pb-3"
+                              }`}
+                            >
+                              <span className={`text-[7px] font-mono font-bold px-1.5 py-0.5 rounded absolute top-2 right-2 uppercase ${
+                                ach.rarity === "Lendário" ? "bg-yellow-950/30 text-yellow-500 border border-yellow-800/10":
+                                ach.rarity === "Épico" ? "bg-purple-950/30 text-purple-400 border border-purple-800/10":
+                                ach.rarity === "Raro" ? "bg-blue-950/30 text-blue-400 border border-blue-800/10":"bg-zinc-900 text-zinc-400 border border-zinc-800"
+                              }`}>{ach.rarity}</span>
+
+                              <div className={`w-9 h-9 rounded-full flex items-center justify-center mb-1.5 mt-2.5 ${ach.unlocked ? "bg-zinc-90 w bg-zinc-900 text-yellow-400 shadow":"bg-zinc-900 text-zinc-650"}`}>
+                                <Icon name={ach.iconName} className="w-5 h-5" />
+                              </div>
+
+                              <h5 className="text-[11px] font-bold text-zinc-200 truncate max-w-[100px]">{ach.title}</h5>
+                              <p className="text-[9px] text-zinc-400 font-medium leading-tight mt-0.5 truncate max-w-[110px]">{ach.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Rank container column */}
+                      <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-[2rem] shadow-lg">
+                        <span className="text-[10px] text-zinc-400 font-mono uppercase block mb-4">Ranking de Aprendizes (Liga Crayon)</span>
+                        
+                        <div className="space-y-2.5">
+                          {leaderboard.map((u, i) => {
+                            const position = i + 1;
+                            return (
+                              <div
+                                key={u.id}
+                                className={`p-3 rounded-xl flex items-center justify-between border ${
+                                  u.isCurrentUser ? "bg-zinc-950 border-yellow-400 shadow-md shadow-yellow-500/10":"bg-zinc-950/40 border-zinc-900/60"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <span className={`text-[10px] font-mono font-black ${position===1 ? "text-yellow-400": position===2 ? "text-zinc-400":"text-zinc-600"}`}>#{position}</span>
+                                  <span className="text-sm">{u.avatar}</span>
+                                  <div className="max-w-[100px] truncate">
+                                    <span className="text-xs font-bold text-zinc-200 block truncate">{u.name}</span>
+                                    <span className="text-[9px] text-zinc-550">Nvl {u.level}</span>
+                                  </div>
+                                </div>
+                                <span className="text-xs font-mono font-black text-zinc-300">{u.xp} XP</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </section>
+            </main>
+
+            {/* persists Footer */}
+            <footer className="bg-zinc-950 border-t border-zinc-900 py-6 text-center text-zinc-600 text-xs">
+              <p>© 2026 Plataforma de Aprendizagem de JavaScript. Todos os dados permanecem salvos localmente.</p>
+            </footer>
+          </div>
+        );
+      }
+
+      // Safe render compiler bootstrapping
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
   </body>
 </html>
-
