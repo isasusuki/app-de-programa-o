@@ -1,0 +1,1095 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JavaScript Trilha Gamificada - Standalone</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <!-- Tailwind CSS (Play CDN v3) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              zinc: {
+                750: '#222226',
+                850: '#151518',
+                950: '#09090b',
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            }
+          }
+        }
+      }
+    </script>
+    <!-- React & Babel CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: #09090b; }
+      ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+      @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+      .animate-float { animation: float 3s ease-in-out infinite; }
+    </style>
+  </head>
+  <body class="bg-zinc-950 text-zinc-100 min-h-screen overflow-x-hidden selection:bg-yellow-400 selection:text-zinc-950">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef } = React;
+
+      // Inline Portable SVG Icon Component
+      const Icon = ({ name, className = "w-5 h-5", ...props }) => {
+        const icons = {
+          Compass: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+            </svg>
+          ),
+          Variable: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M4 20h16A2 2 0 0 0 22 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" />
+              <path d="M8 8h3a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H8" /><path d="M16 8v8" />
+            </svg>
+          ),
+          Zap: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          ),
+          Repeat: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+            </svg>
+          ),
+          MousePointer: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/>
+            </svg>
+          ),
+          Globe: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          ),
+          Lock: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          ),
+          CheckCircle: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          ),
+          Star: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          ),
+          Trophy: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/>
+              <path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34"/><path d="M12 2a6 6 0 0 1 6 6v3.58a6 6 0 0 1-6 6 6 6 0 0 1-6-6V8a6 6 0 0 1 6-6z"/>
+            </svg>
+          ),
+          Flame: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+            </svg>
+          ),
+          Clock: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          ),
+          Settings: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          ),
+          ArrowUp: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+            </svg>
+          ),
+          Heart: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          ),
+          MessageSquare: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          ),
+          Send: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          ),
+          Code: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+          ),
+          Sparkles: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+              <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5 5 3Z"/>
+            </svg>
+          ),
+          PlusCircle: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+          ),
+          ChevronRight: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          ),
+          RefreshCw: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+          ),
+          Share2: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+          ),
+          Terminal: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+          ),
+          Play: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+          ),
+          XCircle: (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          )
+        };
+        return icons[name] || icons.Compass;
+      };
+
+      // Configuration and Database
+      const CURRICULUM = [
+        {
+          id: "mod_0",
+          title: "Módulo 0: Missão Inicial",
+          description: "Dê o primeiro passo escrevendo seu primeiro script interativo em JavaScript.",
+          unlocked: true,
+          completed: false,
+          iconName: "Compass",
+          lessons: [{
+            id: "l_0",
+            title: "O que é JavaScript?",
+            content: "### O que é o JavaScript?\nO **JavaScript** é a linguagem que dá vida à Web! Com ele, alteramos elementos na tela em tempo real.\n\n### O Comando Fundamental\nO `console.log()` é usado para imprimir informações diretamente no painel do programador.\n\n```javascript\nconsole.log('Hello World');\n```"
+          }],
+          challenges: [{
+            id: "initial_mission",
+            title: "Sua Primeira Missão",
+            question: "Utilize o método 'console.log' para exibir o texto 'Hello World' na tela.",
+            template: "// Digite abaixo seu primeiro comando\nconsole.log('Hello World');",
+            expectedKeywords: ["console.log", "Hello World"],
+            isCompleted: false
+          }]
+        },
+        {
+          id: "mod_1",
+          title: "Módulo 1: Variáveis e Tipos",
+          description: "Aprenda a armazenar valores, referenciar dados e usar estruturas primitivas.",
+          unlocked: false,
+          completed: false,
+          iconName: "Variable",
+          lessons: [{
+            id: "l_1",
+            title: "Estudo de Variáveis",
+            content: "### Como guardar dados?\nNo JavaScript moderno, temos duas ferramentas principais:\n\n1. `let`: Para valores mutáveis (ex: saldo de moedas)\n2. `const`: Para valores imutáveis (ex: ano de nascimento)\n\n```javascript\nlet saldo = 100;\nconst pi = 3.1415;\n```"
+          }],
+          challenges: [{
+            id: "var_decl",
+            title: "Declarando Variáveis",
+            question: "Declare uma variável 'let' chamada 'nome_aprendiz' com qualquer texto e uma constante 'pontuacao' igual a 100.",
+            template: "// Declare variables below\nlet nome_aprendiz = 'Gamer';\nconst pontuacao = 100;",
+            expectedKeywords: ["let", "const", "nome_aprendiz", "pontuacao"],
+            isCompleted: false
+          }]
+        },
+        {
+          id: "mod_2",
+          title: "Módulo 2: Funções Poderosas",
+          description: "Agrupe scripts reutilizáveis que realizam ações e retornam resultados.",
+          unlocked: false,
+          completed: false,
+          iconName: "Zap",
+          lessons: [{
+            id: "l_2",
+            title: "Compreendendo Funções",
+            content: "### O que são funções?\nFunções realizam tarefas específicas e utilizam parâmetros de entrada com um `return` para enviar dados de volta.\n\n```javascript\nfunction dobrar(unidade) {\n  return unidade * 2;\n}\n```"
+          }],
+          challenges: [{
+            id: "func_decl",
+            title: "Sua Primeira Função",
+            question: "Crie uma função chamada 'calcularDobro' que aceite um parâmetro numérico e retorne seu dobro.",
+            template: "function calcularDobro(numero) {\n  // Escreva o retorno abaixo\n  return numero * 2;\n}",
+            expectedKeywords: ["function", "return", "calcularDobro"],
+            isCompleted: false
+          }]
+        },
+        {
+          id: "mod_3",
+          title: "Módulo 3: Condições & Loops",
+          description: "Domine desvios condicionais com if/else e loops de repetição de tarefas.",
+          unlocked: false,
+          completed: false,
+          iconName: "Repeat",
+          lessons: [{
+            id: "l_3",
+            title: "Controlando o Fluxo",
+            content: "### Controle Condicional\nO clássico bloco `if / else` possibilita tomar rumos lógicos distintos:\n\n```javascript\nif (tempo > 50) {\n  console.log('Metas batidas!');\n}\n```\n\n### Laços Loops\nLoops repetem instruções enquanto a regra for atendida:\n\n```javascript\nfor (let i = 0; i < 3; i++) {\n  console.log(i);\n}\n```"
+          }],
+          challenges: [{
+            id: "loops",
+            title: "Praticando Repetições",
+            question: "Crie um loop 'for' que conta de 1 a 3 exibindo a contagem com 'console.log(i)'.",
+            template: "for (let i = 1; i <= 3; i++) {\n  console.log(i);\n}",
+            expectedKeywords: ["for", "console.log"],
+            isCompleted: false
+          }]
+        },
+        {
+          id: "mod_4",
+          title: "Módulo 4: Manipulação de DOM",
+          description: "Aprenda a selecionar elementos no HTML e escutar cliques dinâmicos.",
+          unlocked: false,
+          completed: false,
+          iconName: "MousePointer",
+          lessons: [{
+            id: "l_4",
+            title: "Iniciando as Interações",
+            content: "### O objeto document\nA variável `document` permite acessar e alterar textos e eventos do seu site:\n\n- `document.querySelector()` seleciona elementos.\n- `addEventListener('click')` responde aos cliques."
+          }],
+          challenges: [{
+            id: "dom_select",
+            title: "Interação com DOM",
+            question: "Selecione o elemento com a classe '.botao-avancar' usando querySelector e adicione um ouvinte de clique que mostre 'DOM ativo' no console.",
+            template: "const botao = document.querySelector('.botao-avancar');\nbotao.addEventListener('click', () => {\n  console.log('DOM ativo');\n});",
+            expectedKeywords: ["document.querySelector", ".botao-avancar", "addEventListener", "click"],
+            isCompleted: false
+          }]
+        },
+        {
+          id: "mod_5",
+          title: "Módulo 5: Requisições de API",
+          description: "Conecte sua lógica de código com servidores reais em tempo real e de forma assíncrona.",
+          unlocked: false,
+          completed: false,
+          iconName: "Globe",
+          lessons: [{
+            id: "l_5",
+            title: "Mundo Assíncrono",
+            content: "### Async/Await\nBuscamos informações de outros computadores usando a palavra chave `fetch` e esperando os pacotes com `await` sem travar a interface do browser."
+          }],
+          challenges: [{
+            id: "fetch_api",
+            title: "Consumidor de API",
+            question: "Crie a função assíncrona 'obterUsuarios' que executa um fetch no site fictício 'https://api.usuarios.com' e retorna o json obtido.",
+            template: "async function obterUsuarios() {\n  const res = await fetch('https://api.usuarios.com');\n  return await res.json();\n}",
+            expectedKeywords: ["async function", "fetch", "await", "return"],
+            isCompleted: false
+          }]
+        }
+      ];
+
+      const ACHIEVEMENTS = [
+        { id: "hello_world", title: "Primeiro Script", description: "Completou o 'Hello World' com sucesso.", iconName: "CheckCircle", unlocked: false, rarity: "Comum" },
+        { id: "var_master", title: "Mestre das Gavetas", description: "Declarou let e const corretas.", iconName: "Variable", unlocked: false, rarity: "Comum" },
+        { id: "func_wizard", title: "Arquiteto de Funções", description: "Criou funções com retornos lógicos.", iconName: "Zap", unlocked: false, rarity: "Raro" },
+        { id: "loop_king", title: "Rei do Laço", description: "Automatizou tarefas com loops rápidos.", iconName: "Repeat", unlocked: false, rarity: "Raro" },
+        { id: "dom_hacker", title: "Estilista Web", description: "Modificou o DOM capturando cliques.", iconName: "MousePointer", unlocked: false, rarity: "Épico" },
+        { id: "api_wizard", title: "Mago das Conexões", description: "Buscou dados online e assíncronos.", iconName: "Globe", unlocked: false, rarity: "Lendário" }
+      ];
+
+      const FORUM_POSTS = [
+        {
+          id: "post_1",
+          author: "AnaDev_JS",
+          userTitle: "🌟 Veterana",
+          avatarColor: "bg-emerald-500",
+          content: "Lembrete: Em JS moderno, prefira sempre o uso de const para declarar variáveis. Só use o let quando você souber com certeza absoluta que aquele valor vai mudar ao longo da execução do script!",
+          likes: 31,
+          hasLiked: false,
+          createdAt: "Ontem às 10:15",
+          comments: []
+        },
+        {
+          id: "post_2",
+          author: "Rodrigo_Iniciante",
+          userTitle: "🦁 Novato",
+          avatarColor: "bg-amber-500",
+          content: "Alguém tem alguma dica prática de como dominar as promessas (Promises) e async/await de forma fácil? Fico meio perdido com a ordem de execução do código assíncrono.",
+          likes: 12,
+          hasLiked: false,
+          createdAt: "Ontem às 18:30",
+          comments: [
+            { id: "c_1", author: "AnaDev_JS", avatarColor: "bg-emerald-500", content: "Pense na palavra 'await' como um botão de pausa temporário! O código espera a entrega da encomenda antes de prosseguir.", createdAt: "Ontem às 19:00" }
+          ]
+        }
+      ];
+
+      const RANKINGS = [
+        { id: "r_1", name: "Gabriel_Dev", xp: 950, level: 9, avatar: "🧙‍♂️" },
+        { id: "r_2", name: "Mari_Codes", xp: 450, level: 4, avatar: "💻" },
+        { id: "r_3", name: "Você (Aprendiz)", xp: 0, level: 0, avatar: "🦁", isCurrentUser: true }
+      ];
+
+      // Simulated IA Coach Responses
+      const getCoachFeedback = (challengeId, code, isSuccess, errorMsg) => {
+        if (isSuccess) {
+          return {
+            success: true,
+            title: "Desafio Concluído!",
+            msg: "🎉 Excelente solução! O código atendeu a todas as especificações e foi validado com sucesso.",
+            advice: "### Dica do Tutor IA\nExcelente! O uso correto da sintaxe recomendada evita erros no browser. Você recebeu +50 XP e novas medalhas nos seus bento cards de conquistas!"
+          };
+        } else {
+          let advice = "Verifique se você declarou os nomes corretamente.";
+          if (errorMsg) {
+            advice = `Houve um erro no interpretador do navegador: **"${errorMsg}"**`;
+          } else if (challengeId === "initial_mission") {
+            advice = "Dica: escreva exatamente `console.log('Hello World');` com parênteses e aspas corretas.";
+          }
+          return {
+            success: false,
+            title: "Revisão Necessária",
+            msg: "⚠️ Alguns critérios ainda não foram totalmente cumpridos no validador.",
+            advice: `### Como Corrigir\n${advice}\n\nLembre-se de certificar de que as variáveis correspondem exatamente ao requisitado.`
+          };
+        }
+      };
+
+      // App Entry Point
+      function App() {
+        // Player stats
+        const [stats, setStats] = useState(() => {
+          const cached = localStorage.getItem("standalone_learner_stats");
+          return cached ? JSON.parse(cached) : {
+            level: 1,
+            xp: 200,
+            streak: 3,
+            studyTimeToday: 8,
+            dailyGoal: 15,
+            tutorialCompleted: false
+          };
+        });
+
+        const [modules, setModules] = useState(() => {
+          const cached = localStorage.getItem("standalone_learner_modules");
+          return cached ? JSON.parse(cached) : CURRICULUM;
+        });
+
+        const [achievements, setAchievements] = useState(() => {
+          const cached = localStorage.getItem("standalone_learner_achievements");
+          return cached ? JSON.parse(cached) : ACHIEVEMENTS;
+        });
+
+        const [forumPosts, setForumPosts] = useState(() => {
+          const cached = localStorage.getItem("standalone_learner_posts");
+          return cached ? JSON.parse(cached) : FORUM_POSTS;
+        });
+
+        const [rankings, setRankings] = useState(() => {
+          const cached = localStorage.getItem("standalone_learner_rankings");
+          return cached ? JSON.parse(cached) : RANKINGS;
+        });
+
+        // UI tabs and selected content state
+        const [activeTab, setActiveTab] = useState("journey");
+        const [selectedModule, setSelectedModule] = useState(modules[0]);
+        const [playgroundActiveTab, setPlaygroundActiveTab] = useState("lesson");
+        const [userCode, setUserCode] = useState(modules[0].challenges[0].template);
+        const [consoleOutput, setConsoleOutput] = useState("");
+        const [evaluation, setEvaluation] = useState(null);
+        const [tTip, setTTip] = useState(null);
+        const [showGoalModal, setShowGoalModal] = useState(false);
+        const [activeTutorialStep, setActiveTutorialStep] = useState(0);
+        const [toastMessage, setToastMessage] = useState(null);
+
+        // Save progress to storage helper
+        const triggerSave = (nStats, nModules, nAchievements, nRank, nPosts) => {
+          setStats(nStats);
+          setModules(nModules);
+          setAchievements(nAchievements);
+          setRankings(nRank);
+          setForumPosts(nPosts);
+
+          localStorage.setItem("standalone_learner_stats", JSON.stringify(nStats));
+          localStorage.setItem("standalone_learner_modules", JSON.stringify(nModules));
+          localStorage.setItem("standalone_learner_achievements", JSON.stringify(nAchievements));
+          localStorage.setItem("standalone_learner_rankings", JSON.stringify(nRank));
+          localStorage.setItem("standalone_learner_posts", JSON.stringify(nPosts));
+        };
+
+        const showToast = (text) => {
+          setToastMessage(text);
+          setTimeout(() => setToastMessage(null), 3000);
+        };
+
+        // Reset user code when toggling modules
+        const selectModule = (m) => {
+          setSelectedModule(m);
+          setUserCode(m.challenges[0].template);
+          setConsoleOutput("");
+          setEvaluation(null);
+          setTTip(null);
+          setPlaygroundActiveTab("lesson");
+          setActiveTab("playground");
+        };
+
+        // Execute JS sandbox client-side securely
+        const handleRunSandbox = () => {
+          let stdout = [];
+          const fakeConsole = {
+            log: (...args) => {
+              stdout.push(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" "));
+            }
+          };
+
+          try {
+            const sandbox = new Function("console", `
+              try {
+                ${userCode}
+              } catch (e) {
+                throw e;
+              }
+            `);
+            sandbox(fakeConsole);
+            setConsoleOutput(stdout.join("\n") || "Código executado sem saídas de console.");
+          } catch (e) {
+            setConsoleOutput(`🔴 [Erro]: ${e.message}`);
+          }
+        };
+
+        // Validate submission and earn rewards
+        const handleEvaluateCode = () => {
+          let stdout = [];
+          const fakeConsole = {
+            log: (...args) => stdout.push(args.map(arg => String(arg)).join(" "))
+          };
+
+          let runtimeError = null;
+          try {
+            const sandbox = new Function("console", userCode);
+            sandbox(fakeConsole);
+          } catch (e) {
+            runtimeError = e.message;
+          }
+
+          const challenge = selectedModule.challenges[0];
+          const hasKeywords = challenge.expectedKeywords.every(k => userCode.includes(k));
+          
+          let validated = !runtimeError && hasKeywords;
+          if (challenge.id === "initial_mission") {
+            validated = validated && stdout.join(" ").toLowerCase().includes("hello world");
+          }
+
+          const report = getCoachFeedback(challenge.id, userCode, validated, runtimeError);
+          setEvaluation(report);
+
+          if (validated) {
+            showToast("✨ Excelente! Desafio validado (+50 XP)");
+            
+            // Mark module and challenge complete
+            const nextModules = modules.map(m => {
+              if (m.id === selectedModule.id) {
+                return {
+                  ...m,
+                  completed: true,
+                  challenges: m.challenges.map(c => c.id === challenge.id ? { ...c, isCompleted: true } : c)
+                };
+              }
+              return m;
+            });
+
+            // Unlock next module logically
+            let targetUnlockIdx = -1;
+            const currentIdx = modules.findIndex(m => m.id === selectedModule.id);
+            if (currentIdx !== -1 && currentIdx < modules.length - 1) {
+              targetUnlockIdx = currentIdx + 1;
+            }
+
+            const finalModules = nextModules.map((m, i) => i === targetUnlockIdx ? { ...m, unlocked: true } : m);
+
+            // Earn XP
+            const calculatedXp = stats.xp + 50;
+            const updatedLevel = Math.floor(calculatedXp / 100);
+            const nextStats = {
+              ...stats,
+              xp: calculatedXp,
+              level: updatedLevel > stats.level ? updatedLevel : stats.level
+            };
+
+            // Unlock award badges
+            const currentAwardBadge = achievements.map(ach => {
+              if (challenge.id === "initial_mission" && ach.id === "hello_world") return { ...ach, unlocked: true };
+              if (challenge.id === "var_decl" && ach.id === "var_master") return { ...ach, unlocked: true };
+              if (challenge.id === "func_decl" && ach.id === "func_wizard") return { ...ach, unlocked: true };
+              if (challenge.id === "loops" && ach.id === "loop_king") return { ...ach, unlocked: true };
+              if (challenge.id === "dom_select" && ach.id === "dom_hacker") return { ...ach, unlocked: true };
+              if (challenge.id === "fetch_api" && ach.id === "api_wizard") return { ...ach, unlocked: true };
+              return ach;
+            });
+
+            // Update rankings
+            const nextRank = rankings.map(r => {
+              if (r.isCurrentUser) return { ...r, xp: calculatedXp, level: nextStats.level };
+              return r;
+            }).sort((a, b) => b.xp - a.xp);
+
+            triggerSave(nextStats, finalModules, currentAwardBadge, nextRank, forumPosts);
+            setSelectedModule(finalModules[currentIdx]);
+          }
+        };
+
+        const handleRequestHint = () => {
+          const ch = selectedModule.challenges[0];
+          let hintText = "Tente alinhar o nome de suas variáveis ou verificar as aspas.";
+          if (ch.id === "initial_mission") hintText = "Lembre-se de digitar exatamente: `console.log('Hello World');` fazendo uso correto das aspas.";
+          if (ch.id === "var_decl") hintText = "Use let para nome_aprendiz e const para pontuacao em linhas separadas.";
+          setTTip(hintText);
+        };
+
+        // Forum interactive posts
+        const handleNewPost = (e) => {
+          e.preventDefault();
+          const desc = e.target.description.value;
+          if (!desc) return;
+
+          const created = {
+            id: `p_${Date.now()}`,
+            author: "Você (Aprendiz)",
+            userTitle: "🦁 Novato",
+            avatarColor: "bg-yellow-500 text-zinc-950",
+            content: desc,
+            likes: 0,
+            hasLiked: false,
+            createdAt: "Agora mesmo",
+            comments: []
+          };
+
+          const nextPostList = [created, ...forumPosts];
+          triggerSave(stats, modules, achievements, rankings, nextPostList);
+          e.target.reset();
+          showToast("📝 Tópico lançado na comunidade!");
+        };
+
+        // Onboarding Tutorial steps
+        const tutorialSteps = [
+          {
+            title: "Boas-vindas, Futuro Mestre do JS! 🚀",
+            desc: "Aqui você inicia sua trilha gamificada de aprendizado. Ganhe níveis, vença desafios práticos de código e acumule conquistas!",
+            highlight: "Você ganhará XP e medalhas completando exercícios!"
+          },
+          {
+            title: "Playground de Execução Real! 💻",
+            desc: "Nossos módulos incluem uma interface interativa prática para você debugar e validar respostas em tempo real, guiado pelo Tutor IA.",
+            highlight: "Clique em 'Rodar Código' para realizar testes rápidos locais."
+          }
+        ];
+
+        return (
+          <div className="min-h-screen flex flex-col font-sans">
+            {/* Header Area */}
+            <header className="bg-zinc-900/90 border-b border-zinc-800 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 border-2 border-yellow-400 bg-zinc-950 rounded-xl flex items-center justify-center font-black text-yellow-400 animate-float shadow-lg shadow-yellow-400/10">
+                  JS
+                </div>
+                <div>
+                  <h1 className="text-md font-bold tracking-tight text-white flex items-center gap-2">
+                    JavaScript Quest
+                    <span className="text-[10px] uppercase font-mono font-bold tracking-widest px-2 py-0.5 rounded-full bg-yellow-400 text-zinc-950">Standalone</span>
+                  </h1>
+                  <p className="text-xs text-zinc-400 font-mono">Trilha interativa independente sem compilação!</p>
+                </div>
+              </div>
+
+              {/* Navigation Menu Links */}
+              <nav className="flex items-center gap-1.5 overflow-x-auto self-stretch md:self-auto w-full md:w-auto">
+                <button
+                  onClick={() => setActiveTab("journey")}
+                  className={`flex-1 md:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                    activeTab === "journey" ? "bg-yellow-400 text-zinc-950 shadow-md shadow-yellow-400/10" : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  Trilha
+                </button>
+                <button
+                  onClick={() => setActiveTab("playground")}
+                  className={`flex-1 md:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                    activeTab === "playground" ? "bg-yellow-400 text-zinc-950 shadow-md shadow-yellow-400/10" : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  Praticar
+                </button>
+                <button
+                  onClick={() => setActiveTab("community")}
+                  className={`flex-1 md:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                    activeTab === "community" ? "bg-yellow-400 text-zinc-950 shadow-md shadow-yellow-400/10" : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  Fórum
+                </button>
+                <button
+                  onClick={() => setActiveTab("profile")}
+                  className={`flex-1 md:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
+                    activeTab === "profile" ? "bg-yellow-400 text-zinc-950 shadow-md shadow-yellow-400/10" : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  Perfil
+                </button>
+              </nav>
+            </header>
+
+            {/* Main view router switcher */}
+            <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+              {/* Header stats mini metrics bar */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-zinc-900 border border-zinc-800/80 rounded-2xl p-5 flex items-center gap-4 relative overflow-hidden">
+                  <div className="w-12 h-12 bg-zinc-950 rounded-xl border border-zinc-800 flex items-center justify-center font-black font-sans text-yellow-400 text-lg shadow-[0_0_12px_rgba(250,204,21,0.1)]">
+                    {stats.level}
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-400 block font-mono uppercase tracking-wider">Nível do Aluno</span>
+                    <span className="text-sm font-bold text-zinc-200 block">{stats.xp} Total XP</span>
+                  </div>
+                </div>
+
+                <div className="bg-zinc-900 border border-zinc-800/80 rounded-2xl p-5 flex items-center gap-4 relative overflow-hidden">
+                  <div className="w-12 h-12 bg-zinc-950 rounded-xl border border-zinc-800 flex items-center justify-center text-orange-500 text-lg">
+                    <Icon name="Flame" className="w-6 h-6 animate-pulse" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-400 block font-mono uppercase tracking-wider">Dias Seguidos</span>
+                    <span className="text-sm font-bold text-zinc-250 block">{stats.streak} {stats.streak === 1 ? "Dia" : "Dias"}</span>
+                  </div>
+                </div>
+
+                <div className="bg-zinc-900 border border-zinc-800/80 rounded-2xl p-5 flex items-center gap-4 relative overflow-hidden">
+                  <div className="w-12 h-12 bg-zinc-950 rounded-xl border border-zinc-800 flex items-center justify-center text-yellow-400 text-lg">
+                    <Icon name="Clock" className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-400 block font-mono uppercase tracking-wider">Estudos Hoje</span>
+                    <span className="text-sm font-bold text-zinc-250 block">
+                      {stats.studyTimeToday} / {stats.dailyGoal} min
+                    </span>
+                  </div>
+                  <button onClick={() => setShowGoalModal(true)} className="absolute top-2 right-2 text-zinc-500 hover:text-yellow-400 transition-colors">
+                    <Icon name="Settings" className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="bg-zinc-900 border border-zinc-800/80 rounded-2xl p-5 flex items-center gap-4 relative overflow-hidden">
+                  <div className="w-12 h-12 bg-zinc-950 rounded-xl border border-zinc-800 flex items-center justify-center text-yellow-500 text-lg">
+                    <Icon name="Trophy" className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-400 block font-mono uppercase tracking-wider">Tutor Online</span>
+                    <span className="text-sm font-bold text-emerald-400 block">Sempre pronto!</span>
+                  </div>
+                </div>
+              </div>
+
+              {activeTab === "journey" && (
+                <div className="space-y-6">
+                  {/* Journey map grid */}
+                  <div className="bg-zinc-900 border border-zinc-800 p-6 md:p-8 rounded-[2rem] relative overflow-hidden">
+                    <div className="absolute -right-24 -top-24 w-80 h-80 bg-yellow-400/5 blur-[100px] rounded-full" />
+                    
+                    <div className="mb-6 relative z-10">
+                      <h3 className="text-lg font-black text-white uppercase tracking-wider">Mapa da Trilha JS</h3>
+                      <p className="text-xs text-zinc-400 font-medium">Clique nos módulos ativos para estudar os conteúdos teóricos e cumprir desafios de código.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+                      {modules.map((m) => (
+                        <div
+                          key={m.id}
+                          className={`border rounded-3xl p-6 relative transition-all min-h-[220px] flex flex-col justify-between ${
+                            m.completed
+                              ? "bg-zinc-950/60 border-yellow-400/20 shadow-md shadow-yellow-400/5 opacity-100"
+                              : m.unlocked
+                              ? "bg-zinc-950/40 border-zinc-800 hover:border-yellow-400 p-6 opacity-100"
+                              : "bg-zinc-950/10 border-zinc-900/60 opacity-40 select-none cursor-not-allowed"
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-4">
+                              <span className="text-[10px] font-bold font-mono tracking-widest text-yellow-500 uppercase">
+                                {m.completed ? "Concluído!" : "Disponível"}
+                              </span>
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${m.completed ? "bg-yellow-400/10 text-yellow-400" : "bg-zinc-900 text-zinc-500"}`}>
+                                <Icon name={m.iconName} className="w-5 h-5" />
+                              </div>
+                            </div>
+
+                            <h4 className="text-base font-bold text-zinc-200 mb-2">{m.title}</h4>
+                            <p className="text-xs text-zinc-400 leading-relaxed font-medium mb-4">{m.description}</p>
+                          </div>
+
+                          {m.unlocked ? (
+                            <button
+                              onClick={() => selectModule(m)}
+                              className="w-full bg-zinc-900 hover:bg-zinc-800 border-2 border-zinc-800 text-xs text-zinc-200 py-3 rounded-2xl font-bold cursor-pointer hover:border-yellow-400 transition-colors uppercase tracking-wider flex items-center justify-center gap-1.5"
+                            >
+                              Explorar Módulo &rarr;
+                            </button>
+                          ) : (
+                            <div className="text-xs align-bottom text-zinc-600 font-mono flex items-center gap-1.5 pt-3">
+                              <Icon name="Lock" className="w-3.5 h-3.5" />
+                              Conclua módulo anterior para destravar
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "playground" && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Left Column: Lessons / Theory */}
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-6 space-y-4 flex flex-col justify-between overflow-hidden min-h-[500px]">
+                    <div>
+                      {/* Section head tabs */}
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-4 mb-4">
+                        <div>
+                          <span className="text-[10px] uppercase font-mono tracking-widest font-extrabold text-yellow-500 block">Exercício</span>
+                          <h3 className="text-md font-bold text-white">{selectedModule.title}</h3>
+                        </div>
+                        <div className="bg-zinc-950 p-1 rounded-xl flex">
+                          <button
+                            onClick={() => setPlaygroundActiveTab("lesson")}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-lg ${playgroundActiveTab === "lesson" ? "bg-yellow-400 text-zinc-950" : "text-zinc-400"}`}
+                          >
+                            Teoria
+                          </button>
+                          <button
+                            onClick={() => setPlaygroundActiveTab("challenge")}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-lg ${playgroundActiveTab === "challenge" ? "bg-yellow-400 text-zinc-950" : "text-zinc-400"}`}
+                          >
+                            Tarefa
+                          </button>
+                        </div>
+                      </div>
+
+                      {playgroundActiveTab === "lesson" ? (
+                        <div className="prose prose-invert text-xs text-zinc-300 leading-relaxed space-y-4 font-medium h-[320px] overflow-y-auto pr-2">
+                          {selectedModule.lessons[0].content.split("\n\n").map((para, i) => (
+                            <p key={i} className="whitespace-pre-line">{para}</p>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="space-y-4 h-[320px] overflow-y-auto pr-2">
+                          <div className="bg-zinc-950/80 p-5 rounded-2xl border border-zinc-850">
+                            <h4 className="text-sm font-bold text-white mb-2">{selectedModule.challenges[0].title}</h4>
+                            <p className="text-xs text-zinc-350 leading-relaxed font-medium">{selectedModule.challenges[0].question}</p>
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] text-zinc-500 font-mono uppercase block mb-1">Dica do Tutor IA</span>
+                            <div className="flex gap-1.5 flex-wrap">
+                              {selectedModule.challenges[0].expectedKeywords.map((tag) => (
+                                <span key={tag} className="bg-zinc-950 border border-zinc-850 text-zinc-400 text-[10px] px-2.5 py-1 font-mono rounded-lg">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button onClick={handleRequestHint} className="bg-zinc-950 border border-zinc-800 text-zinc-300 hover:text-white px-4 py-2.5 rounded-xl text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5">
+                        💡 Pedir Dica ({stats.level >= 2 ? "Ativo" : "Disponível"})
+                      </button>
+                      <button onClick={() => setPlaygroundActiveTab("challenge")} className="flex-1 bg-yellow-400 text-zinc-950 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1">
+                        Ir para o Exercício &rarr;
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Code Editor */}
+                  <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] overflow-hidden flex flex-col justify-between min-h-[500px]">
+                    <div className="bg-zinc-950 px-6 py-4 border-b border-zinc-850 flex items-center justify-between">
+                      <span className="text-xs font-mono text-zinc-400 flex items-center gap-1.5">
+                        <Icon name="Terminal" className="w-3.5 h-3.5 text-zinc-450" />
+                        script.js
+                      </span>
+                      <button onClick={() => setUserCode(selectedModule.challenges[0].template)} className="text-[10px] text-zinc-500 hover:text-zinc-200 flex items-center gap-1">
+                        Resetar Exercício
+                      </button>
+                    </div>
+
+                    <div className="flex-1 flex relative">
+                      <div className="w-10 bg-zinc-950/40 select-none text-right pr-2 pt-4 font-mono text-xs text-zinc-600 border-r border-zinc-900 leading-6">
+                        {Array.from({ length: 12 }).map((_, i) => <div key={i}>{i + 1}</div>)}
+                      </div>
+                      <textarea
+                        value={userCode}
+                        onChange={(e) => setUserCode(e.target.value)}
+                        className="flex-1 bg-zinc-950 p-4 font-mono text-xs text-yellow-400 leading-6 resize-none focus:outline-none w-full min-h-[200px]"
+                        placeholder="// Digite aqui seu script do exercício..."
+                      />
+                    </div>
+
+                    {/* Console / Simulated local terminal output */}
+                    <div className="bg-zinc-950 border-t border-zinc-850 p-4">
+                      <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider block mb-1">Saída Do Console:</span>
+                      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 font-mono text-xs text-zinc-300 min-h-[70px] max-h-[120px] overflow-y-auto">
+                        <pre className="whitespace-pre-wrap">{consoleOutput || "Clique no botão abaixo para rodar e visualizar qualquer retorno."}</pre>
+                      </div>
+                    </div>
+
+                    {/* Call-to-actions controls */}
+                    <div className="bg-zinc-950 p-4 border-t border-zinc-850 flex gap-2">
+                      <button onClick={handleRunSandbox} className="bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 hover:text-white px-4 py-3 rounded-2xl text-xs font-bold transition-all">
+                        Rodar Código
+                      </button>
+                      <button onClick={handleEvaluateCode} className="flex-1 bg-yellow-400 hover:bg-yellow-350 text-zinc-950 px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all">
+                        Enviar Solução!
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tips banner show triggers */}
+              {tTip && activeTab === "playground" && (
+                <div className="bg-zinc-900 border border-yellow-400/20 p-4 rounded-2xl flex items-start gap-3">
+                  <span className="text-yellow-400 text-lg">💡</span>
+                  <div>
+                    <span className="text-xs font-bold text-white block uppercase tracking-wider">Coach Inteligente Dica:</span>
+                    <p className="text-xs text-zinc-350 leading-relaxed mt-0.5">{tTip}</p>
+                  </div>
+                </div>
+              )}
+
+              {evaluation && activeTab === "playground" && (
+                <div className={`p-6 rounded-3xl border ${evaluation.success ? "bg-yellow-400/5 border-yellow-400/20" : 'bg-red-500/5 border-red-500/20'}`}>
+                  <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-2">{evaluation.title}</h4>
+                  <p className="text-xs text-zinc-300 leading-relaxed font-semibold mb-4">{evaluation.msg}</p>
+                  <p className="text-xs whitespace-pre-wrap text-zinc-400 leading-relaxed">{evaluation.advice}</p>
+                </div>
+              )}
+
+              {activeTab === "community" && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left column: Add/Publish Post and forums discussion guide */}
+                  <div className="lg:col-span-1 bg-zinc-900 border border-zinc-800 p-6 rounded-[2rem] space-y-4">
+                    <h3 className="text-base font-black text-white uppercase tracking-wider">Iniciar Nova Conversa</h3>
+                    
+                    <form onSubmit={handleNewPost} className="space-y-4">
+                      <div>
+                        <label className="text-[10px] text-zinc-400 font-mono uppercase block mb-1">O que você está pensando?</label>
+                        <textarea
+                          name="description"
+                          className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-3 text-xs text-zinc-300 focus:outline-none min-h-[100px]"
+                          placeholder="Compartilhe uma dica de desenvolvimento ou faça perguntas..."
+                          required
+                        />
+                      </div>
+                      <button type="submit" className="w-full bg-yellow-400 text-zinc-950 py-3 rounded-2xl text-xs font-bold uppercase tracking-wider cursor-pointer">
+                        Publicar Tópico &rarr;
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* Right Column: Dynamic feed list */}
+                  <div className="lg:col-span-2 space-y-6">
+                    {forumPosts.map((post) => (
+                      <div key={post.id} className="bg-zinc-900 border border-zinc-800 p-6 rounded-[2rem] space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-zinc-850 border border-zinc-750 flex items-center justify-center font-bold text-xs text-white">
+                              {post.author[0]}
+                            </div>
+                            <div>
+                              <span className="text-xs font-bold text-white block">{post.author}</span>
+                              <span className="text-[10px] text-yellow-500 font-mono uppercase tracking-widest block">{post.userTitle}</span>
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-zinc-500 font-mono">{post.createdAt}</span>
+                        </div>
+
+                        <p className="text-xs text-zinc-350 leading-relaxed font-semibold">{post.content}</p>
+
+                        <div className="flex items-center gap-3 border-t border-zinc-850 pt-4 mt-2">
+                          <button className="flex items-center gap-1.5 text-[10px] text-zinc-400 hover:text-white font-mono uppercase">
+                            <Icon name="Heart" className="w-3.5 h-3.5 text-zinc-500" />
+                            {post.likes} Curtidas
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "profile" && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Stats & achievements */}
+                  <div className="md:col-span-2 space-y-6">
+                    <div className="bg-zinc-900 border border-zinc-800 p-6 md:p-8 rounded-[2rem] relative overflow-hidden">
+                      <div className="absolute -right-20 -top-20 w-80 h-80 bg-yellow-400/5 blur-[100px] rounded-full" />
+                      <h3 className="text-sm font-black text-white tracking-wider mb-6 uppercase">Minhas Medalhas Conquistadas</h3>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {achievements.map((ach) => (
+                          <div
+                            key={ach.id}
+                            className={`border p-4 rounded-2xl flex flex-col items-center justify-center text-center relative ${
+                              ach.unlocked ? "bg-zinc-950/60 border-zinc-800" : "bg-zinc-950/20 border-zinc-900 opacity-40"
+                            }`}
+                          >
+                            <span className="text-[8px] font-mono font-bold tracking-widest px-2 py-0.5 rounded-full absolute top-2 right-2 uppercase bg-zinc-900 text-zinc-400">
+                              {ach.rarity}
+                            </span>
+                            <div className="w-12 h-12 rounded-full bg-zinc-900 text-yellow-400 flex items-center justify-center mb-2 mt-4">
+                              <Icon name={ach.iconName} className="w-6 h-6" />
+                            </div>
+                            <h4 className="text-xs font-bold text-zinc-200 truncate max-w-[130px]">{ach.title}</h4>
+                            <p className="text-[10px] text-zinc-500 leading-snug mt-1 max-w-[120px]">{ach.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Weekly Rankings */}
+                  <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-[2rem] space-y-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Icon name="Trophy" className="w-5 h-5 text-yellow-400 shrink-0" />
+                      <h3 className="text-sm font-black text-white tracking-wider uppercase">Ranking Semanal</h3>
+                    </div>
+
+                    <div className="space-y-3">
+                      {rankings.map((user, idx) => (
+                        <div key={user.id} className={`p-3 rounded-2xl flex items-center justify-between border ${user.isCurrentUser ? "bg-zinc-950 border-yellow-400 shadow-md shadow-yellow-400/10" : "bg-zinc-950/40 border-zinc-900"}`}>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-mono font-bold text-zinc-400">#{idx + 1}</span>
+                            <span className="text-lg">{user.avatar}</span>
+                            <div>
+                              <span className="text-xs font-bold text-zinc-200 block">{user.name}</span>
+                              <span className="text-[9px] text-zinc-500 font-mono">Nível {user.level}</span>
+                            </div>
+                          </div>
+                          <span className="text-xs font-mono font-bold text-zinc-400">{user.xp} XP</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </main>
+
+            {/* Simulated active dynamic modal triggers */}
+            {showGoalModal && (
+              <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-[2rem] max-w-sm w-full space-y-4 relative">
+                  <h4 className="text-sm font-black text-white uppercase tracking-wider">Ajustar Meta Diária de estudos</h4>
+                  <p className="text-xs text-zinc-400">Marque por quantos minutos diários você pretende focar no aprendizado guiado de JavaScript:</p>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    {[5, 10, 15, 30].map(mins => (
+                      <button
+                        key={mins}
+                        onClick={() => handleSetGoalValue(mins)}
+                        className={`py-3 rounded-xl block font-bold text-xs uppercase cursor-pointer ${stats.dailyGoal === mins ? "bg-yellow-400 text-zinc-950" : "bg-zinc-950 hover:bg-zinc-800 text-zinc-400"}`}
+                      >
+                        {mins} minutos
+                      </button>
+                    ))}
+                  </div>
+
+                  <button onClick={() => setShowGoalModal(false)} className="w-full py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-500 font-bold block">
+                    Fechar Janela
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* First-use onboarding interactive card */}
+            {!stats.tutorialCompleted && (
+              <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                <div className="bg-zinc-900 border border-zinc-800 max-w-md w-full rounded-[2.2rem] p-8 relative space-y-6">
+                  <div className="absolute -right-8 -top-8 w-24 h-24 bg-yellow-400/5 blur-3xl rounded-full" />
+                  
+                  <div className="flex flex-col items-center text-center space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-zinc-950 border border-zinc-800 shadow-inner flex items-center justify-center text-yellow-400">
+                      <Icon name="Star" className="w-8 h-8 animate-pulse" />
+                    </div>
+                    <h3 className="text-lg font-black text-white tracking-tight">{tutorialSteps[activeTutorialStep].title}</h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed font-semibold">{tutorialSteps[activeTutorialStep].desc}</p>
+                  </div>
+
+                  <div className="bg-zinc-950 p-4 border border-zinc-850 rounded-2xl">
+                    <span className="text-[10px] text-zinc-500 font-mono tracking-wider uppercase block mb-1 font-bold">Dica Útil</span>
+                    <p className="text-xs text-yellow-400 font-medium">💡 {tutorialSteps[activeTutorialStep].highlight}</p>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4">
+                    <button onClick={() => triggerSave({ ...stats, tutorialCompleted: true }, modules, achievements, rankings, forumPosts)} className="text-xs text-zinc-500 hover:text-white uppercase font-bold tracking-wider">
+                      Pular Tutorial
+                    </button>
+                    
+                    {activeTutorialStep < tutorialSteps.length - 1 ? (
+                      <button onClick={() => setActiveTutorialStep(prev => prev + 1)} className="bg-zinc-100 hover:bg-zinc-200 text-zinc-900 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-wider">
+                        Avançar &rarr;
+                      </button>
+                    ) : (
+                      <button onClick={() => triggerSave({ ...stats, tutorialCompleted: true }, modules, achievements, rankings, forumPosts)} className="bg-yellow-400 hover:bg-yellow-350 text-zinc-950 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-yellow-400/10">
+                        Entrar na Trilha!
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Custom generic popup notifications and toast */}
+            {toastMessage && (
+              <div className="fixed bottom-6 right-6 z-50 bg-yellow-400 text-zinc-950 py-3.5 px-6 rounded-2xl text-xs font-black uppercase tracking-wider shadow-xl shadow-yellow-400/10 animate-float">
+                {toastMessage}
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
